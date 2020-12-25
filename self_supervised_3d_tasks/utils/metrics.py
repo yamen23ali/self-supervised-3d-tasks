@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import cohen_kappa_score, accuracy_score, jaccard_score
 from tensorflow.keras import backend as K
-from tensorflow_core.python.keras.metrics import BinaryAccuracy
+from tensorflow.python.keras.metrics import BinaryAccuracy
 
 
 def triplet_loss(y_true, y_pred, _alpha=1.0):

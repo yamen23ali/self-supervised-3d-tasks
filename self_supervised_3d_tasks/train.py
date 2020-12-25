@@ -7,7 +7,7 @@ from self_supervised_3d_tasks.data.numpy_3d_loader import DataGeneratorUnlabeled
 
 from self_supervised_3d_tasks.data.make_data_generator import get_data_generators
 from self_supervised_3d_tasks.data.image_2d_loader import DataGeneratorUnlabeled2D
-from self_supervised_3d_tasks.algorithms import cpc, jigsaw, relative_patch_location, rotation, exemplar
+from self_supervised_3d_tasks.algorithms import cpc, jigsaw, relative_patch_location, rotation, exemplar, simclr_weighted
 from self_supervised_3d_tasks.utils.model_utils import get_writing_path
 
 keras_algorithm_list = {
@@ -15,7 +15,8 @@ keras_algorithm_list = {
     "jigsaw": jigsaw,
     "rpl": relative_patch_location,
     "rotation": rotation,
-    "exemplar": exemplar
+    "exemplar": exemplar,
+    "simclr_weighted": simclr_weighted,
 }
 
 data_gen_list = {
