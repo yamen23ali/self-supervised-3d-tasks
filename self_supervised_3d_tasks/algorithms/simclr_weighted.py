@@ -16,23 +16,6 @@ def get_euclidean_matrix():
 
     return scipy.spatial.distance.cdist(positions,positions)
 
-def simclr_weighted_loss(ytrue, ypredicted):
-    #print("=============hi")
-
-    transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
-    dot_product = K.batch_dot(ypredicted, transposed_predictions)
-
-    euclidean_dist = get_euclidean_matrix()
-
-    weighted_similarities = 1/ K.sum(dot_product *  K.constant(euclidean_dist), axis = 2)
-    #print(weighted_similarities.shape)
-
-    #print(ypredicted.shape)
-    #print(transposed_predictions.shape)
-    #print(dot_product.shape)
-    return K.sum(weighted_similarities)
-
-
 class SimclrWeightedBuilder(AlgorithmBuilderBase):
     def __init__(
             self,
@@ -54,6 +37,7 @@ class SimclrWeightedBuilder(AlgorithmBuilderBase):
 
         self.patch_dim = int(self.data_dim / patches_per_side)
         self.patch_shape_3d = (self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels)
+        self.euclidean_dist = K.constant(get_euclidean_matrix())
 
 
     def apply_model(self):
@@ -73,17 +57,44 @@ class SimclrWeightedBuilder(AlgorithmBuilderBase):
 
         return simclr_weighted_model
 
+    def l2_norm(self, x, axis=None):
+        square_sum = K.sum(K.square(x), axis=axis, keepdims=True)
+        norm = K.sqrt(K.maximum(square_sum, K.epsilon()))
+
+        return norm
+
+    def simclr_weighted_loss(self, ytrue, ypredicted):
+        """"
+        A weighted version of the loss function presented in Simclr paper
+        """
+        predictions_norm = self.l2_norm(ypredicted, axis=2)
+
+        transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
+        transposed_predictions_norm = self.l2_norm(transposed_predictions)
+
+        dot_product = K.batch_dot(ypredicted, transposed_predictions)
+
+        cosine_similarity = dot_product / (predictions_norm*transposed_predictions_norm)
+
+
+        weighted_similarities = cosine_similarity *  self.euclidean_dist
+
+
+        patch_loss = -K.log(K.exp(1.0)/ K.sum(K.exp(weighted_similarities) , axis = 2))
+
+        return K.sum(patch_loss)
+
     def get_training_model(self):
         model = self.apply_model()
         model.compile(
             optimizer=keras.optimizers.Adam(lr=self.lr),
-            loss=simclr_weighted_loss
+            loss=self.simclr_weighted_loss
         )
 
         return model
 
     def get_training_preprocessing(self):
-        def f_3d(x, y):  # not using y here, as it gets generated
+        def f_3d(x, y):
             return preprocess_3d(x, self.patches_per_side)
 
         return f_3d, f_3d
