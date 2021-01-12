@@ -29,7 +29,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         self.patches_per_side = patches_per_side
         self.code_size = code_size
         self.number_channels = number_channels
-        self.patches_number = patches_per_side * patches_per_side * patches_per_side
+        self.patches_number = patches_per_side * patches_per_side * patches_per_side * 2
 
         self.patch_dim = int(self.data_dim / patches_per_side)
         self.patch_shape_3d = (self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels)
@@ -67,7 +67,8 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return norm
 
     def contrastive_loss(self, ytrue, ypredicted):
-        print("=================loss")
+        print(f'Predictions shapes {ypredicted.shape} ')
+
         predictions_norm = self.l2_norm(ypredicted, axis=2)
 
         transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
@@ -79,6 +80,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         # Set self similarity to zero so that we can calculate losses through matrix operations
         similarities = K.exp(cosine_similarity)
         similarities = similarities * self.inverse_eye
+        similarities = K.print_tensor(similarities)
 
         denominator = K.sum(similarities, axis=2)
 
