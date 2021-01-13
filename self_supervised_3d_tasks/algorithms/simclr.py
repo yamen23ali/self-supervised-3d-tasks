@@ -72,15 +72,16 @@ class SimclrBuilder(AlgorithmBuilderBase):
         predictions_norm = self.l2_norm(ypredicted, axis=2)
 
         transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
-        transposed_predictions_norm = self.l2_norm(transposed_predictions)
+        transposed_predictions_norm = self.l2_norm(transposed_predictions, axis=1)
+
+        norms = K.batch_dot(predictions_norm, transposed_predictions_norm)
 
         dot_product = K.batch_dot(ypredicted, transposed_predictions)
-        cosine_similarity = dot_product / (predictions_norm*transposed_predictions_norm)
+        cosine_similarity = dot_product / norms
 
         # Set self similarity to zero so that we can calculate losses through matrix operations
         similarities = K.exp(cosine_similarity)
         similarities = similarities * self.inverse_eye
-        similarities = K.print_tensor(similarities)
 
         denominator = K.sum(similarities, axis=2)
 
@@ -99,7 +100,8 @@ class SimclrBuilder(AlgorithmBuilderBase):
         model = self.apply_model()
         model.compile(
             optimizer=keras.optimizers.Adam(lr=self.lr),
-            loss=self.contrastive_loss
+            loss=self.contrastive_loss,
+            metrics=self.contrastive_loss
         )
 
         return model

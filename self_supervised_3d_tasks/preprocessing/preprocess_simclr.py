@@ -111,6 +111,7 @@ def preprocess_3d(batch, patches_per_side):
 
             augmented_volume_patches.append(selected_augmentations[0](patch))
             augmented_volume_patches.append(selected_augmentations[1](patch))
+            #augmented_volume_patches.append(patch)
 
         augmented_volumes_patches.append(augmented_volume_patches)
 
