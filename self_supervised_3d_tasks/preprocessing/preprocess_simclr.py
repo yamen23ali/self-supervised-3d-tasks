@@ -1,5 +1,6 @@
 import numpy as np
 import albumentations as ab
+import nibabel as nib
 
 from math import sqrt
 from self_supervised_3d_tasks.preprocessing.utils.crop import do_crop_3d
@@ -28,74 +29,105 @@ def crop_patches_3d(image, patches_per_side):
 
     return patches
 
-def resize(x, new_size):
-    # x.shape[3] is the number of channels
-    new_image = np.zeros((new_size, new_size, new_size, x.shape[3]))
+def resize(patch, new_size):
+    # image.shape[3] is the number of channels
+    new_image = np.zeros((new_size, new_size, new_size, patch.shape[3]))
 
-    for z in range(x.shape[2]):
-            new_image[:, :, z, :] = np.array(ab.Resize(new_size, new_size)(image=x[:,:,z])["image"])
+    for z in range(patch.shape[2]):
+            new_image[:, :, z, :] = np.array(ab.Resize(new_size, new_size)(image=patch[:,:,z])["image"])
     return new_image
 
-def random_flip(x):
+def random_flip(patch):
     # Flip with prob 0.5
     should_flip = np.random.randint(0, 2)
     if should_flip == 1:
-        return np.flip(x, 1)
+        print('Randomly flipping patch')
+        return np.flip(patch, 1)
 
-    return x
+    return patch
 
-def rotate_patch_3d(x):
+def rotate_patch_3d(patch):
+    print('Rotating patch with shape')
 
     rotated_patch = []
     # Randomly choose the rotation access
     rot = np.random.randint(1, 10)
 
     if rot == 1:
-        rotated_patch = np.transpose(np.flip(x, 1), (1, 0, 2, 3))  # 90 deg Z
+        rotated_patch = np.transpose(np.flip(patch, 1), (1, 0, 2, 3))  # 90 deg Z
     elif rot == 2:
-        rotated_patch = np.flip(np.transpose(x, (1, 0, 2, 3)), 1)  # -90 deg Z
+        rotated_patch = np.flip(np.transpose(patch, (1, 0, 2, 3)), 1)  # -90 deg Z
     elif rot == 3:
-        rotated_patch = np.flip(x, (0, 1))  # 180 degrees on z axis
+        rotated_patch = np.flip(patch, (0, 1))  # 180 degrees on z axis
     elif rot == 4:
-        rotated_patch = np.transpose(np.flip(x, 1), (0, 2, 1, 3))  # 90 deg X
+        rotated_patch = np.transpose(np.flip(patch, 1), (0, 2, 1, 3))  # 90 deg X
     elif rot == 5:
-        rotated_patch = np.flip(np.transpose(x, (0, 2, 1, 3)), 1)  # -90 deg X
+        rotated_patch = np.flip(np.transpose(patch, (0, 2, 1, 3)), 1)  # -90 deg X
     elif rot == 6:
-        rotated_patch = np.flip(x, (1, 2))  # 180 degrees on x axis
+        rotated_patch = np.flip(patch, (1, 2))  # 180 degrees on x axis
     elif rot == 7:
-        rotated_patch = np.transpose(np.flip(x, 0), (2, 1, 0, 3))  # 90 deg Y
+        rotated_patch = np.transpose(np.flip(patch, 0), (2, 1, 0, 3))  # 90 deg Y
     elif rot == 8:
-        rotated_patch = np.transpose(np.flip(x, 0), (2, 1, 0, 3))  # -90 deg Y
+        rotated_patch = np.transpose(np.flip(patch, 0), (2, 1, 0, 3))  # -90 deg Y
     elif rot == 9:
-        rotated_patch = np.flip(x, (0, 2))  # 180 degrees on y axis
+        rotated_patch = np.flip(patch, (0, 2))  # 180 degrees on y axis
 
     return rotated_patch
 
-def crop_and_resize(x):
+def crop_and_resize(patch):
+    print(f'Crop & Resize patch')
+
     # This might become a hyper parameter but for now let's fix it
     # It indicates how many pieces we would divide each side into
     pieces_num = 4
 
     # All sides have the same size so anyone would do
-    side_length = int(x.shape[0] / pieces_num)
+    side_length = int(patch.shape[0] / pieces_num)
 
     # Select the starting point of the cropping randomly
     start_x = np.random.randint(0, pieces_num)
     start_y = np.random.randint(0, pieces_num)
     start_z = np.random.randint(0, pieces_num)
 
-    cropped_patch = do_crop_3d(x, start_x, start_y, start_z, side_length, side_length, side_length)
+    cropped_patch = do_crop_3d(patch, start_x, start_y, start_z, side_length, side_length, side_length)
 
-    resized_patch = resize(cropped_patch, x.shape[0])
+    resized_patch = resize(cropped_patch, patch.shape[0])
 
     return random_flip(resized_patch)
+
+def adjust_brightness(patch, max_delta=0.125):
+    delta = np.random.uniform(-max_delta, max_delta)
+
+    return patch + delta
+
+def adjust_contrast(patch, lower=0.5, upper=1.5):
+    contrast_factor = np.random.uniform(lower, upper)
+    patch_mean = np.mean(patch)
+
+    return (contrast_factor * (patch - patch_mean)) + patch_mean
+
+def distort_color(patch):
+    print('Distorting patch color')
+
+    # Shuffle to randomize distortions application order
+    distortions = [adjust_brightness, adjust_contrast]
+    np.random.shuffle(distortions)
+
+    return distortions[1](distortions[0](patch))
+
+def keep_original(patch):
+    print('Keeping the original patch')
+
+    return patch
 
 def preprocess_3d(batch, patches_per_side):
     _, w, h, d, _ = batch.shape
     assert w == h and h == d, "accepting only cube volumes"
 
     volumes_patches = []
-    augmentations = np.array([rotate_patch_3d, crop_and_resize])
+    augmentations = np.array([
+        rotate_patch_3d, crop_and_resize,
+        keep_original, distort_color])
     augmented_volumes_patches = []
 
     for volume in batch:
@@ -111,7 +143,6 @@ def preprocess_3d(batch, patches_per_side):
 
             augmented_volume_patches.append(selected_augmentations[0](patch))
             augmented_volume_patches.append(selected_augmentations[1](patch))
-            #augmented_volume_patches.append(patch)
 
         augmented_volumes_patches.append(augmented_volume_patches)
 
