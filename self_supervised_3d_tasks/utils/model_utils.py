@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.python.keras.layers.pooling import Pooling3D, Pooling2D
-from tensorflow_core.python.keras.layers import Wrapper, UpSampling2D
+from tensorflow.python.keras.layers import Wrapper, UpSampling2D
 from tensorflow.keras.layers import Reshape
 from tensorflow.keras import Model, Input
 from tensorflow.keras.applications import InceptionV3, InceptionResNetV2, ResNet152, DenseNet121
@@ -63,7 +63,7 @@ def init(f, name="training", n_gpus=1):
     print("{} {} with parameters: ".format(name, args))
     print("###########################################")
 
-    aquire_free_gpus(amount=n_gpus, **args)
+    #aquire_free_gpus(amount=n_gpus, **args)
     f(**args)
 
 
