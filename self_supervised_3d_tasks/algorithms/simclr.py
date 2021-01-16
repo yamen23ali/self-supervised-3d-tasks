@@ -101,7 +101,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         model.compile(
             optimizer=keras.optimizers.Adam(lr=self.lr),
             loss=self.contrastive_loss,
-            metrics=self.contrastive_loss
+            metrics=[self.contrastive_loss]
         )
 
         return model
