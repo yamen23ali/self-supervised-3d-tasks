@@ -1,20 +1,20 @@
 {
   "algorithm": "simclr",
-  "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/images_resized_128_labeled",
+  "data_dir": "/content/gdrive/images_resized_128_labeled",
   "dataset_name": "pancreas3d",
 
   "data_is_3D": true,
 
-  "code_size": 5,
-  "enc_filters": 2,
+  "code_size": 512,
+  "enc_filters": 16,
   "patches_per_side": 4,
   "data_dim": 128,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
-  "batch_size": 2,
-  "embed_dim": 10,
+  "batch_size": 32,
+  "embed_dim": 64,
 
   "lr": 1e-4,
-  "epochs": 2
+  "epochs": 1000
 }
