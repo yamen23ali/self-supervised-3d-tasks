@@ -193,7 +193,8 @@ def preprocess_3d(batch, patches_per_side):
     #    apply_sobel_filter, cut_out])
 
     augmentations = np.array([
-        rotate_patch_3d, keep_original])
+        rotate_patch_3d, keep_original, distort_color,
+        add_gaussian_noise, apply_gaussian_blur])
 
 
     for volume in batch:
