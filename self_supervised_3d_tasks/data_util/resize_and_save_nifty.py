@@ -115,8 +115,8 @@ def data_generation_pancreas_2D_slices():
 
 def data_generation_pancreas():
     result_path = "/content/gdrive/My Drive/Thesis/images_resized_128_labeled"
-    path_to_data = "/content/gdrive/My Drive/Thesis/imagesTr"
-    path_to_labels = "/content/gdrive/My Drive/Thesis/labelsTr"
+    path_to_data = "/content/gdrive/My Drive/Thesis/imagesTr_full"
+    path_to_labels = "/content/gdrive/My Drive/Thesis/labelsTr_full"
 
     dim = (128, 128, 128)
     list_files_temp = os.listdir(path_to_data)
