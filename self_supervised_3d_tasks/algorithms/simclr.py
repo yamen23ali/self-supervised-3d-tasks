@@ -67,7 +67,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return norm
 
     def contrastive_loss(self, ytrue, ypredicted):
-        #print(f'Predictions shapes {ypredicted.shape} ')
+        print(f'Predictions shapes {ypredicted.shape} ')
 
         predictions_norm = self.l2_norm(ypredicted, axis=2)
 

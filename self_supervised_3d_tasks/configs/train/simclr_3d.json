@@ -5,8 +5,8 @@
 
   "data_is_3D": true,
 
-  "code_size": 64,
-  "enc_filters": 16,
+  "code_size": 16,
+  "enc_filters": 8,
   "patches_per_side": 4,
   "data_dim": 128,
 
