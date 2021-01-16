@@ -114,9 +114,9 @@ def data_generation_pancreas_2D_slices():
 
 
 def data_generation_pancreas():
-    result_path = "/mnt/mpws2019cl1/Task07_Pancreas/images_resized_128_labeled"
-    path_to_data = "/mnt/mpws2019cl1/Task07_Pancreas/imagesTr"
-    path_to_labels = "/mnt/mpws2019cl1/Task07_Pancreas/labelsTr"
+    result_path = "/content/gdrive/My Drive/Thesis/images_resized_128_labeled"
+    path_to_data = "/content/gdrive/My Drive/Thesis/imagesTr"
+    path_to_labels = "/content/gdrive/My Drive/Thesis/labelsTr"
 
     dim = (128, 128, 128)
     list_files_temp = os.listdir(path_to_data)
@@ -425,5 +425,6 @@ if __name__ == "__main__":
     # data_conversion_ukb()
     # data_conversion_ukb_masks()
     # stack_ukb_3D_modalities()
-    data_conversion_brats(split='train')
+    #data_conversion_brats(split='train')
     # data_conversion_brats(split='test')
+    data_generation_pancreas()
