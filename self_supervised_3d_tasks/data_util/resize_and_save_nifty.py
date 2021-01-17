@@ -154,6 +154,36 @@ def data_generation_pancreas():
             traceback.print_tb(e.__traceback__)
             continue
 
+def training_data_generation_pancreas():
+    path_to_data = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/imagesTr_full"
+    result_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/imagesTr_full_resized"
+
+    dim = (128, 128, 128)
+    list_files_temp = os.listdir(path_to_data)
+
+    for i, file_name in enumerate(list_files_temp):
+        path_to_image = "{}/{}".format(path_to_data, file_name)
+        try:
+            img = nib.load(path_to_image)
+            img = img.get_fdata()
+
+            img, bb = read_scan_find_bbox(img)
+
+            img = skTrans.resize(img, dim, order=1, preserve_range=True)
+
+            result = np.expand_dims(img, axis=3)
+
+            file_name = file_name[:file_name.index('.')] + ".npy"
+            np.save("{}/{}".format(result_path, file_name), result)
+
+            perc = (float(i) * 100.0) / len(list_files_temp)
+            print(f"{perc:.2f} % done")
+
+        except Exception as e:
+            print("Error while loading image {}.".format(path_to_image))
+            traceback.print_tb(e.__traceback__)
+            continue
+
 
 def crop_one_volume(volume, volume_size, volume_for_resize=None):
     """
@@ -427,4 +457,4 @@ if __name__ == "__main__":
     # stack_ukb_3D_modalities()
     #data_conversion_brats(split='train')
     # data_conversion_brats(split='test')
-    data_generation_pancreas()
+    training_data_generation_pancreas()

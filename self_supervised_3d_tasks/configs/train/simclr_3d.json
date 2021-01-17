@@ -1,6 +1,6 @@
 {
   "algorithm": "simclr",
-  "data_dir": "/content/gdrive/My Drive/Thesis/images_resized_128_labeled",
+  "data_dir": "/content/gdrive/My Drive/Thesis/imagesTr_full_resized",
   "dataset_name": "pancreas3d",
 
   "data_is_3D": true,
