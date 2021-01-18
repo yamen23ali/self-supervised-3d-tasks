@@ -4,7 +4,7 @@ import tensorflow.keras.backend as K
 import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Lambda
 from tensorflow.keras.layers import Flatten, TimeDistributed
 
 from self_supervised_3d_tasks.algorithms.algorithm_base import AlgorithmBuilderBase
@@ -56,45 +56,64 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
         x_encoded = TimeDistributed(model_with_embed_dim)(x_input)
 
+        x_encoded = Lambda(self.reshape_predictions)(x_encoded)
+
         simclr_model = keras.models.Model(inputs=x_input, outputs=x_encoded)
 
         return simclr_model
 
+    def reshape_predictions(self, predictions):
+        #predictions_shape = K.print_tensor(K.shape(predictions))
+        mid_index = int(predictions.shape[1]/2)
+
+        predictions_1 = predictions[:,:mid_index,:]
+        #predictions1_shape = K.print_tensor(K.shape(predictions_1))
+        predictions_1 = tf.reshape(predictions_1, (-1, predictions_1.shape[2]))
+        #predictions1_shape = K.print_tensor(K.shape(predictions_1))
+
+        predictions_2 = predictions[:,mid_index:,:]
+        #predictions2_shape = K.print_tensor(K.shape(predictions_2))
+        predictions_2 = tf.reshape(predictions_2, (-1, predictions_2.shape[2]))
+        #predictions2_shape = K.print_tensor(K.shape(predictions_2))
+
+        return tf.concat((predictions_1, predictions_2), axis=0)
+
     def l2_norm(self, x, axis=None):
         square_sum = K.sum(K.square(x), axis=axis, keepdims=True)
         norm = K.sqrt(K.maximum(square_sum, K.epsilon()))
-
         return norm
 
     def contrastive_loss(self, ytrue, ypredicted):
         print(f'Predictions shapes {ypredicted.shape} ')
+        patches_number = K.shape(ypredicted)[0]
+        #predictions_shape = K.print_tensor(K.shape(ypredicted))
 
-        predictions_norm = self.l2_norm(ypredicted, axis=2)
+        predictions_norm = self.l2_norm(ypredicted, axis=1)
 
-        transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
-        transposed_predictions_norm = self.l2_norm(transposed_predictions, axis=1)
+        transposed_predictions = K.permute_dimensions(ypredicted, (1, 0))
+        transposed_predictions_norm = self.l2_norm(transposed_predictions, axis=0)
 
-        norms = K.batch_dot(predictions_norm, transposed_predictions_norm)
+        norms = K.dot(predictions_norm, transposed_predictions_norm)
 
-        dot_product = K.batch_dot(ypredicted, transposed_predictions)
+        dot_product = K.dot(ypredicted, transposed_predictions)
         cosine_similarity = dot_product / norms
 
         # Set self similarity to zero so that we can calculate losses through matrix operations
         similarities = K.exp(cosine_similarity)
-        similarities = similarities * self.inverse_eye
+        similarities_mask = 1 - tf.one_hot(tf.range(patches_number), patches_number)
+        similarities = similarities * similarities_mask
 
-        denominator = K.sum(similarities, axis=2)
+        # Calculate denominator
+        denominator = K.sum(similarities, axis=1)
 
-        # By multiplying with the mask and then summing on axis 2 we are effectivly just selecting the pairs
-        # As suggested in the contrastive loss function E.g.
-        # For patch 1 we only keep patch 2 and vice versa
-        # For patch 3 we only keep patch 4 and vice versa
-        numerator = similarities * self.numerator_mask
-        numerator = K.sum(numerator, axis=2)
+        # Calculate numerator
+        mid_index = int(patches_number/2)
+        similarities_1 = tf.linalg.diag_part(similarities[:mid_index,mid_index:])
+        similarities_2 = tf.linalg.diag_part(similarities[mid_index:,:mid_index])
+        numerator = tf.concat((similarities_1, similarities_2), axis=0)
 
-        batch_loss = -K.log(numerator / denominator)
-
-        return K.mean(batch_loss)
+        # Final Loss
+        return K.mean( -K.log(numerator / denominator))
 
     def get_training_model(self):
         model = self.apply_model()

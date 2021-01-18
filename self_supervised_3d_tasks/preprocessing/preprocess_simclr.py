@@ -201,16 +201,24 @@ def preprocess_3d(batch, patches_per_side):
         volumes_patches.append(crop_patches_3d(volume, patches_per_side))
 
     for volume_patches in volumes_patches:
-        augmented_volume_patches = []
+        augmented_patches_1 = []
+        augmented_patches_2 = []
         for patch in volume_patches:
             patch = np.array(patch)
 
             selected_indices = np.random.choice(len(augmentations), size=2, replace=False)
             selected_augmentations = augmentations[selected_indices]
 
-            augmented_volume_patches.append(selected_augmentations[0](patch))
-            augmented_volume_patches.append(selected_augmentations[1](patch))
+            augmented_patches_1.append(selected_augmentations[0](patch))
+            augmented_patches_2.append(selected_augmentations[1](patch))
 
+        #print("============ Shapes")
+        #print(np.array(augmented_patches_1).shape)
+        #print(np.array(augmented_patches_2).shape)
+        augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
+        #print(augmented_volume_patches.shape)
         augmented_volumes_patches.append(augmented_volume_patches)
+        #print(np.array(augmented_volumes_patches).shape)
+        #print("============ Shapes")
 
     return np.array(augmented_volumes_patches), np.array([])
