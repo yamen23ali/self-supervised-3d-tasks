@@ -86,7 +86,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
     def contrastive_loss(self, ytrue, ypredicted):
         print(f'Predictions shapes {ypredicted.shape} ')
         patches_number = K.shape(ypredicted)[0]
-        #predictions_shape = K.print_tensor(K.shape(ypredicted))
+        #predictions_shape = K.print_tensor(patches_number)
 
         predictions_norm = self.l2_norm(ypredicted, axis=1)
 
@@ -107,9 +107,14 @@ class SimclrBuilder(AlgorithmBuilderBase):
         denominator = K.sum(similarities, axis=1)
 
         # Calculate numerator
-        mid_index = int(patches_number/2)
-        similarities_1 = tf.linalg.diag_part(similarities[:mid_index,mid_index:])
-        similarities_2 = tf.linalg.diag_part(similarities[mid_index:,:mid_index])
+        mid_index = tf.cast(tf.math.divide(patches_number, 2), tf.int32)
+
+        similarities_1 = tf.slice(similarities, [0,mid_index], [mid_index, mid_index])
+        similarities_1 = tf.linalg.diag_part(similarities_1)
+
+        similarities_2 = tf.slice(similarities, [mid_index,0], [mid_index, mid_index])
+        similarities_2 = tf.linalg.diag_part(similarities_2)
+
         numerator = tf.concat((similarities_1, similarities_2), axis=0)
 
         # Final Loss
