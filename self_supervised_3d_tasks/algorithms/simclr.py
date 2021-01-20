@@ -28,7 +28,6 @@ class SimclrBuilder(AlgorithmBuilderBase):
         super(SimclrBuilder, self).__init__(data_dim, number_channels, lr, data_is_3D, **kwargs)
 
         self.temprature = temprature
-        print(f'temprattttt{temprature}')
         self.patches_per_side = patches_per_side
         self.code_size = code_size
         self.number_channels = number_channels
