@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import albumentations as ab
 import nibabel as nib
@@ -6,6 +7,7 @@ from math import sqrt
 from self_supervised_3d_tasks.preprocessing.utils.crop import do_crop_3d
 from scipy.ndimage.filters import gaussian_filter, sobel
 
+thismodule = sys.modules[__name__]
 
 def crop_patches_3d(image, patches_per_side):
     h, w, d, _ = image.shape
@@ -193,22 +195,15 @@ def keep_original(patch, **kwargs):
     #print('Keeping the original patch')
     return patch
 
-def preprocess_3d(batch, patches_per_side):
+def preprocess_3d(batch, patches_per_side, augmentations_names):
     _, w, h, d, _ = batch.shape
     assert w == h and h == d, "accepting only cube volumes"
 
     volumes = []
     augmented_volumes_patches = []
-    augmentations = np.array([
-        rotate_patch_3d, crop_and_resize,
-        keep_original, distort_color,
-        apply_gaussian_blur, add_gaussian_noise,
-        apply_sobel_filter, cut_out,
-        global_pair])
 
-    #augmentations = np.array([
-    #    rotate_patch_3d, keep_original, distort_color,
-    #    add_gaussian_noise, apply_gaussian_blur])
+    # Convert the augmentations names we get from config file to functions
+    augmentations = np.array([getattr(thismodule, name) for name in augmentations_names])
 
     for volume in batch:
         volumes.append(crop_patches_3d(volume, patches_per_side))

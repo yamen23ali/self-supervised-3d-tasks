@@ -23,11 +23,13 @@ class SimclrBuilder(AlgorithmBuilderBase):
             lr=1e-3,
             data_is_3D=False,
             temprature=0.05,
+            augmentations=[],
             **kwargs,
     ):
         super(SimclrBuilder, self).__init__(data_dim, number_channels, lr, data_is_3D, **kwargs)
 
         self.temprature = temprature
+        self.augmentations = augmentations
         self.patches_per_side = patches_per_side
         self.code_size = code_size
         self.number_channels = number_channels
@@ -133,7 +135,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def get_training_preprocessing(self):
         def f_3d(x, y):
-            return preprocess_3d(x, self.patches_per_side)
+            return preprocess_3d(x, self.patches_per_side, self.augmentations)
 
         return f_3d, f_3d
 

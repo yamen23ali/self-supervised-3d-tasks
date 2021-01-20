@@ -3,6 +3,11 @@
   "base_workspace": "/content/gdrive/My Drive/Thesis/workspace",
   "data_dir": "/content/gdrive/My Drive/Thesis/imagesTr_full_resized",
   "dataset_name": "pancreas3d",
+  "augmentations":[
+    "rotate_patch_3d", "crop_and_resize", "keep_original",
+    "distort_color","apply_gaussian_blur", "add_gaussian_noise",
+    "apply_sobel_filter", "cut_out", "global_pair"
+  ],
 
   "data_is_3D": true,
   "temprature": 0.05,
