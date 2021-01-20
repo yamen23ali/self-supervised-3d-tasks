@@ -22,10 +22,13 @@ class SimclrBuilder(AlgorithmBuilderBase):
             code_size=1024,
             lr=1e-3,
             data_is_3D=False,
+            temprature=0.05,
             **kwargs,
     ):
         super(SimclrBuilder, self).__init__(data_dim, number_channels, lr, data_is_3D, **kwargs)
 
+        self.temprature = temprature
+        print(f'temprattttt{temprature}')
         self.patches_per_side = patches_per_side
         self.code_size = code_size
         self.number_channels = number_channels
@@ -84,7 +87,6 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return norm
 
     def contrastive_loss(self, ytrue, ypredicted):
-        print(f'Predictions shapes {ypredicted.shape} ')
         patches_number = K.shape(ypredicted)[0]
         #predictions_shape = K.print_tensor(patches_number)
 
@@ -99,7 +101,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         cosine_similarity = dot_product / norms
 
         # Set self similarity to zero so that we can calculate losses through matrix operations
-        similarities = K.exp(cosine_similarity)
+        similarities = K.exp(cosine_similarity / self.temprature)
         similarities_mask = 1 - tf.one_hot(tf.range(patches_number), patches_number)
         similarities = similarities * similarities_mask
 
