@@ -14,7 +14,7 @@
 
   "top_architecture": "big_fully",
   "number_channels": 1,
-  "batch_size": 4,
+  "batch_size": 16,
   "embed_dim": 64,
 
   "lr": 1e-4,
