@@ -20,12 +20,8 @@ def aquire_free_gpus(amount=1, use_gpu=None, **kwargs):
         by=["memory.used", "memory.free"], ascending=[True, False]
     )
 
-    print(f'GPU DF {gpu_df}')
     if use_gpu is not None:
         gpu_df = gpu_df[gpu_df["number"].isin(use_gpu)]
-
-    print(f'Use gpu {use_gpu}')
-    print(f'GPU DF {gpu_df}')
 
     # gpu_df.drop(0, inplace=True) # remove GPUs here if they dont work
     output = []

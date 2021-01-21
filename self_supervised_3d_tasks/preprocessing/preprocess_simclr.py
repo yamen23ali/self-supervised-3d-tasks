@@ -233,4 +233,4 @@ def preprocess_3d(batch, patches_per_side, augmentations_names):
         augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
         augmented_volumes_patches.append(augmented_volume_patches)
 
-    return np.array(augmented_volumes_patches), np.array([])
+    return np.array(augmented_volumes_patches), np.zeros(len(batch))
