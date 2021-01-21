@@ -1,7 +1,7 @@
 {
   "algorithm": "simclr",
-  "base_workspace": "/content/gdrive/My Drive/Thesis/workspace",
-  "data_dir": "/content/gdrive/My Drive/Thesis/imagesTr_full_resized",
+  "base_workspace": "/home/Yamen.Ali/workspace",
+  "data_dir": "/home/Yamen.Ali/imagesTr_full_resized",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "crop_and_resize", "keep_original",
@@ -19,7 +19,7 @@
 
   "top_architecture": "big_fully",
   "number_channels": 1,
-  "batch_size": 4,
+  "batch_size": 64,
   "embed_dim": 64,
 
   "lr": 1e-4,
