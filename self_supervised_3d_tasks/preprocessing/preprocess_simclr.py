@@ -195,7 +195,10 @@ def keep_original(patch, **kwargs):
     #print('Keeping the original patch')
     return patch
 
-def preprocess_3d(batch, patches_per_side, augmentations_names):
+def get_augmentations(augmentations_names):
+    return np.array([getattr(thismodule, name) for name in augmentations_names])
+
+def preprocess_3d_batch_level_loss(batch, patches_per_side, augmentations_names):
     _, w, h, d, _ = batch.shape
     assert w == h and h == d, "accepting only cube volumes"
 
@@ -203,7 +206,7 @@ def preprocess_3d(batch, patches_per_side, augmentations_names):
     augmented_volumes_patches = []
 
     # Convert the augmentations names we get from config file to functions
-    augmentations = np.array([getattr(thismodule, name) for name in augmentations_names])
+    augmentations = get_augmentations(augmentations_names)
 
     for volume in batch:
         volumes.append(crop_patches_3d(volume, patches_per_side))
@@ -231,6 +234,44 @@ def preprocess_3d(batch, patches_per_side, augmentations_names):
             )
 
         augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
+        augmented_volumes_patches.append(augmented_volume_patches)
+
+    return np.array(augmented_volumes_patches), np.zeros(len(batch))
+
+def preprocess_3d_volume_level_loss(batch, patches_per_side, augmentations_names):
+    _, w, h, d, _ = batch.shape
+    assert w == h and h == d, "accepting only cube volumes"
+
+    volumes = []
+    augmented_volumes_patches = []
+
+    # Convert the augmentations names we get from config file to functions
+    augmentations = get_augmentations(augmentations_names)
+
+    for volume in batch:
+        volumes.append(crop_patches_3d(volume, patches_per_side))
+
+    for volume_index, volume_patches in enumerate(volumes):
+        augmented_volume_patches = []
+        for patch_index, patch in enumerate(volume_patches):
+            patch = np.array(patch)
+
+            selected_indices = np.random.choice(len(augmentations), size=2, replace=False)
+            selected_augmentations = augmentations[selected_indices]
+
+            augmented_volume_patches.append(
+                selected_augmentations[0](
+                    patch=patch, patch_index=patch_index,
+                    volume_index=volume_index, volumes=volumes
+                )
+            )
+            augmented_volume_patches.append(
+                selected_augmentations[1](
+                    patch=patch, patch_index=patch_index,
+                    volume_index=volume_index, volumes=volumes
+                )
+            )
+
         augmented_volumes_patches.append(augmented_volume_patches)
 
     return np.array(augmented_volumes_patches), np.zeros(len(batch))

@@ -7,6 +7,8 @@
     "distort_color","apply_gaussian_blur", "add_gaussian_noise",
     "apply_sobel_filter", "cut_out", "global_pair"
   ],
+  "loss_function_name": "contrastive_loss_batch_level",
+  "use_cpu": true,
 
   "data_is_3D": true,
   "temprature": 0.05,
@@ -22,5 +24,5 @@
   "embed_dim": 10,
 
   "lr": 1e-4,
-  "epochs": 2
+  "epochs": 1
 }

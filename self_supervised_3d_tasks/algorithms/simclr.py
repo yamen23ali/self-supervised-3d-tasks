@@ -8,9 +8,8 @@ from tensorflow.keras.layers import Dense, Lambda
 from tensorflow.keras.layers import Flatten, TimeDistributed
 
 from self_supervised_3d_tasks.algorithms.algorithm_base import AlgorithmBuilderBase
-from self_supervised_3d_tasks.preprocessing.preprocess_simclr import preprocess_3d
+from self_supervised_3d_tasks.preprocessing.preprocess_simclr import preprocess_3d_batch_level_loss, preprocess_3d_volume_level_loss
 from self_supervised_3d_tasks.utils.model_utils import apply_encoder_model_3d
-
 
 class SimclrBuilder(AlgorithmBuilderBase):
     def __init__(
@@ -24,9 +23,14 @@ class SimclrBuilder(AlgorithmBuilderBase):
             data_is_3D=False,
             temprature=0.05,
             augmentations=[],
+            loss_function_name='contrastive_loss_volume_level',
             **kwargs,
     ):
         super(SimclrBuilder, self).__init__(data_dim, number_channels, lr, data_is_3D, **kwargs)
+
+        self.loss_function = self.contrastive_loss_volume_level
+        if loss_function_name =='contrastive_loss_batch_level':
+            self.loss_function = self.contrastive_loss_batch_level
 
         self.temprature = temprature
         self.augmentations = augmentations
@@ -67,18 +71,17 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return simclr_model
 
     def reshape_predictions(self, predictions):
-        #predictions_shape = K.print_tensor(K.shape(predictions))
+        # Only reshape when we want to compute the contrastive loss on batch level
+        if self.loss_function == self.contrastive_loss_volume_level:
+            return predictions
+
         mid_index = int(predictions.shape[1]/2)
 
         predictions_1 = predictions[:,:mid_index,:]
-        #predictions1_shape = K.print_tensor(K.shape(predictions_1))
         predictions_1 = tf.reshape(predictions_1, (-1, predictions_1.shape[2]))
-        #predictions1_shape = K.print_tensor(K.shape(predictions_1))
 
         predictions_2 = predictions[:,mid_index:,:]
-        #predictions2_shape = K.print_tensor(K.shape(predictions_2))
         predictions_2 = tf.reshape(predictions_2, (-1, predictions_2.shape[2]))
-        #predictions2_shape = K.print_tensor(K.shape(predictions_2))
 
         return tf.concat((predictions_1, predictions_2), axis=0)
 
@@ -87,9 +90,38 @@ class SimclrBuilder(AlgorithmBuilderBase):
         norm = K.sqrt(K.maximum(square_sum, K.epsilon()))
         return norm
 
-    def contrastive_loss(self, ytrue, ypredicted):
+    def contrastive_loss_volume_level(self, ytrue, ypredicted):
+        #predictions_shape = K.print_tensor(K.shape(ypredicted))
+        predictions_norm = self.l2_norm(ypredicted, axis=2)
+
+        transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
+        transposed_predictions_norm = self.l2_norm(transposed_predictions, axis=1)
+
+        norms = K.batch_dot(predictions_norm, transposed_predictions_norm)
+
+        dot_product = K.batch_dot(ypredicted, transposed_predictions)
+        cosine_similarity = dot_product / norms
+
+        # Set self similarity to zero so that we can calculate losses through matrix operations
+        similarities = K.exp(cosine_similarity / self.temprature)
+        similarities = similarities * self.inverse_eye
+
+        denominator = K.sum(similarities, axis=2)
+
+        # By multiplying with the mask and then summing on axis 2 we are effectivly just selecting the pairs
+        # As suggested in the contrastive loss function E.g.
+        # For patch 1 we only keep patch 2 and vice versa
+        # For patch 3 we only keep patch 4 and vice versa
+        numerator = similarities * self.numerator_mask
+        numerator = K.sum(numerator, axis=2)
+
+        batch_loss = -K.log(numerator / denominator)
+
+        return K.mean(batch_loss)
+
+    def contrastive_loss_batch_level(self, ytrue, ypredicted):
+        #predictions_shape = K.print_tensor(K.shape(ypredicted))
         patches_number = K.shape(ypredicted)[0]
-        #predictions_shape = K.print_tensor(patches_number)
 
         predictions_norm = self.l2_norm(ypredicted, axis=1)
 
@@ -112,6 +144,12 @@ class SimclrBuilder(AlgorithmBuilderBase):
         # Calculate numerator
         mid_index = tf.cast(tf.math.divide(patches_number, 2), tf.int32)
 
+        # Because of the way we reshaped the predictions in. The similarities between
+        # two augementations of the same patch can be found at the main diagonal of the
+        # second quarter and thrid quarter of the similarities matrix.
+        # I.E., if we divide the sqaured shape similarities matrix into 4 quarters, then the main diagonals
+        # of the second quarter ( (0 -> mid_index) rows, (mid_index -> len(similarities)) columns)
+        # and the third quarter ( (mid_index -> len(similarities)) rows, (0 -> mid_index) columns)
         similarities_1 = tf.slice(similarities, [0,mid_index], [mid_index, mid_index])
         similarities_1 = tf.linalg.diag_part(similarities_1)
 
@@ -127,15 +165,17 @@ class SimclrBuilder(AlgorithmBuilderBase):
         model = self.apply_model()
         model.compile(
             optimizer=keras.optimizers.Adam(lr=self.lr),
-            loss=self.contrastive_loss,
-            metrics=[self.contrastive_loss]
+            loss=self.loss_function,
+            metrics=[self.loss_function]
         )
-
         return model
 
     def get_training_preprocessing(self):
         def f_3d(x, y):
-            return preprocess_3d(x, self.patches_per_side, self.augmentations)
+            if self.loss_function == self.contrastive_loss_volume_level:
+                return preprocess_3d_volume_level_loss(x, self.patches_per_side, self.augmentations)
+
+            return preprocess_3d_batch_level_loss(x, self.patches_per_side, self.augmentations)
 
         return f_3d, f_3d
 
