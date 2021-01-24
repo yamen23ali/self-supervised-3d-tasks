@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import albumentations as ab
 import nibabel as nib
@@ -6,6 +7,7 @@ from math import sqrt
 from self_supervised_3d_tasks.preprocessing.utils.crop import do_crop_3d
 from scipy.ndimage.filters import gaussian_filter, sobel
 
+thismodule = sys.modules[__name__]
 
 def crop_patches_3d(image, patches_per_side):
     h, w, d, _ = image.shape
@@ -49,7 +51,7 @@ def random_flip(patch):
 
     return patch
 
-def rotate_patch_3d(patch):
+def rotate_patch_3d(patch, **kwargs):
     #print('Rotating patch')
 
     rotated_patch = []
@@ -77,7 +79,7 @@ def rotate_patch_3d(patch):
 
     return rotated_patch
 
-def crop_and_resize(patch, alpha=4):
+def crop_and_resize(patch, alpha=4, **kwargs):
     #print(f'Crop & Resize patch')
 
     # All sides have the same size so anyone would do
@@ -101,7 +103,7 @@ def crop_and_resize(patch, alpha=4):
 
     return random_flip(resized_patch)
 
-def add_gaussian_noise(patch, max_mean=0.3, max_sigma=0.1):
+def add_gaussian_noise(patch, max_mean=0.3, max_sigma=0.1, **kwargs):
     """"
     default max_mean, max_sigma are optimal to keep at least some features in the resulted image
     """
@@ -111,7 +113,7 @@ def add_gaussian_noise(patch, max_mean=0.3, max_sigma=0.1):
 
     return patch + np.random.normal(mean, sigma, patch.shape)
 
-def apply_gaussian_blur(patch, max_sigma=1.0):
+def apply_gaussian_blur(patch, max_sigma=1.0, **kwargs):
     """"
     default max_sigma is optimal to keep at least some features in the resulted image
     """
@@ -120,7 +122,7 @@ def apply_gaussian_blur(patch, max_sigma=1.0):
 
     return gaussian_filter(patch, sigma)
 
-def apply_sobel_filter(patch):
+def apply_sobel_filter(patch, **kwargs):
     #print(f'Apply sobel filter')
 
     dx = sobel(patch, 0)
@@ -131,18 +133,18 @@ def apply_sobel_filter(patch):
 
     return magnitued * (1.0 / np.max(magnitued))
 
-def adjust_brightness(patch, max_delta=0.125):
+def adjust_brightness(patch, max_delta=0.125, **kwargs):
     delta = np.random.uniform(-max_delta, max_delta)
 
     return patch + delta
 
-def adjust_contrast(patch, lower=0.5, upper=1.5):
+def adjust_contrast(patch, lower=0.5, upper=1.5, **kwargs):
     contrast_factor = np.random.uniform(lower, upper)
     patch_mean = np.mean(patch)
 
     return (contrast_factor * (patch - patch_mean)) + patch_mean
 
-def distort_color(patch):
+def distort_color(patch, **kwargs):
     #print('Distorting patch color')
 
     # Shuffle to randomize distortions application order
@@ -151,7 +153,7 @@ def distort_color(patch):
 
     return distortions[1](distortions[0](patch))
 
-def cut_out(patch, alpha=4):
+def cut_out(patch, alpha=4, **kwargs):
     #print('Apply cutout patch')
 
     # All sides have the same size so anyone would do
@@ -175,38 +177,101 @@ def cut_out(patch, alpha=4):
 
     return cutout_patch
 
-def keep_original(patch):
-    #print('Keeping the original patch')
+def global_pair(patch, patch_index, volume_index, volumes):
+    #print('Get global pair')
 
+    if len(volumes) == 1: return patch
+
+    valid_choices = np.arange(0, len(volumes))
+    # Delete the volume of the current patch
+    # so we don't end up with identity transformation
+    valid_choices = np.delete(valid_choices, volume_index)
+    index = np.random.choice(len(valid_choices), size=1, replace=False)[0]
+    selected_volume = valid_choices[index]
+
+    return volumes[selected_volume][patch_index]
+
+def keep_original(patch, **kwargs):
+    #print('Keeping the original patch')
     return patch
 
-def preprocess_3d(batch, patches_per_side):
+def get_augmentations(augmentations_names):
+    return np.array([getattr(thismodule, name) for name in augmentations_names])
+
+def preprocess_3d_batch_level_loss(batch, patches_per_side, augmentations_names):
     _, w, h, d, _ = batch.shape
     assert w == h and h == d, "accepting only cube volumes"
 
-    volumes_patches = []
+    volumes = []
     augmented_volumes_patches = []
-    augmentations = np.array([
-        rotate_patch_3d, crop_and_resize,
-        keep_original, distort_color,
-        apply_gaussian_blur, add_gaussian_noise,
-        apply_sobel_filter, cut_out])
 
+    # Convert the augmentations names we get from config file to functions
+    augmentations = get_augmentations(augmentations_names)
 
     for volume in batch:
-        volumes_patches.append(crop_patches_3d(volume, patches_per_side))
+        volumes.append(crop_patches_3d(volume, patches_per_side))
 
-    for volume_patches in volumes_patches:
-        augmented_volume_patches = []
-        for patch in volume_patches:
+    for volume_index, volume_patches in enumerate(volumes):
+        augmented_patches_1 = []
+        augmented_patches_2 = []
+        for patch_index, patch in enumerate(volume_patches):
             patch = np.array(patch)
 
             selected_indices = np.random.choice(len(augmentations), size=2, replace=False)
             selected_augmentations = augmentations[selected_indices]
 
-            augmented_volume_patches.append(selected_augmentations[0](patch))
-            augmented_volume_patches.append(selected_augmentations[1](patch))
+            augmented_patches_1.append(
+                selected_augmentations[0](
+                    patch=patch, patch_index=patch_index,
+                    volume_index=volume_index, volumes=volumes
+                )
+            )
+            augmented_patches_2.append(
+                selected_augmentations[1](
+                    patch=patch, patch_index=patch_index,
+                    volume_index=volume_index, volumes=volumes
+                )
+            )
+
+        augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
+        augmented_volumes_patches.append(augmented_volume_patches)
+
+    return np.array(augmented_volumes_patches), np.zeros(len(batch))
+
+def preprocess_3d_volume_level_loss(batch, patches_per_side, augmentations_names):
+    _, w, h, d, _ = batch.shape
+    assert w == h and h == d, "accepting only cube volumes"
+
+    volumes = []
+    augmented_volumes_patches = []
+
+    # Convert the augmentations names we get from config file to functions
+    augmentations = get_augmentations(augmentations_names)
+
+    for volume in batch:
+        volumes.append(crop_patches_3d(volume, patches_per_side))
+
+    for volume_index, volume_patches in enumerate(volumes):
+        augmented_volume_patches = []
+        for patch_index, patch in enumerate(volume_patches):
+            patch = np.array(patch)
+
+            selected_indices = np.random.choice(len(augmentations), size=2, replace=False)
+            selected_augmentations = augmentations[selected_indices]
+
+            augmented_volume_patches.append(
+                selected_augmentations[0](
+                    patch=patch, patch_index=patch_index,
+                    volume_index=volume_index, volumes=volumes
+                )
+            )
+            augmented_volume_patches.append(
+                selected_augmentations[1](
+                    patch=patch, patch_index=patch_index,
+                    volume_index=volume_index, volumes=volumes
+                )
+            )
 
         augmented_volumes_patches.append(augmented_volume_patches)
 
-    return np.array(augmented_volumes_patches), np.array([])
+    return np.array(augmented_volumes_patches), np.zeros(len(batch))

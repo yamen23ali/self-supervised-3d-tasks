@@ -114,9 +114,9 @@ def data_generation_pancreas_2D_slices():
 
 
 def data_generation_pancreas():
-    result_path = "/mnt/mpws2019cl1/Task07_Pancreas/images_resized_128_labeled"
-    path_to_data = "/mnt/mpws2019cl1/Task07_Pancreas/imagesTr"
-    path_to_labels = "/mnt/mpws2019cl1/Task07_Pancreas/labelsTr"
+    result_path = "/content/gdrive/My Drive/Thesis/images_resized_128_labeled"
+    path_to_data = "/content/gdrive/My Drive/Thesis/imagesTr_full"
+    path_to_labels = "/content/gdrive/My Drive/Thesis/labelsTr_full"
 
     dim = (128, 128, 128)
     list_files_temp = os.listdir(path_to_data)
@@ -145,6 +145,36 @@ def data_generation_pancreas():
             label_file_name = file_name[:file_name.index('.')] + "_label.npy"
             np.save("{}/{}".format(result_path, file_name), result)
             np.save("{}/{}".format(result_path, label_file_name), label_result)
+
+            perc = (float(i) * 100.0) / len(list_files_temp)
+            print(f"{perc:.2f} % done")
+
+        except Exception as e:
+            print("Error while loading image {}.".format(path_to_image))
+            traceback.print_tb(e.__traceback__)
+            continue
+
+def training_data_generation_pancreas():
+    path_to_data = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/imagesTr_full"
+    result_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/imagesTr_full_resized"
+
+    dim = (128, 128, 128)
+    list_files_temp = os.listdir(path_to_data)
+
+    for i, file_name in enumerate(list_files_temp):
+        path_to_image = "{}/{}".format(path_to_data, file_name)
+        try:
+            img = nib.load(path_to_image)
+            img = img.get_fdata()
+
+            img, bb = read_scan_find_bbox(img)
+
+            img = skTrans.resize(img, dim, order=1, preserve_range=True)
+
+            result = np.expand_dims(img, axis=3)
+
+            file_name = file_name[:file_name.index('.')] + ".npy"
+            np.save("{}/{}".format(result_path, file_name), result)
 
             perc = (float(i) * 100.0) / len(list_files_temp)
             print(f"{perc:.2f} % done")
@@ -425,5 +455,6 @@ if __name__ == "__main__":
     # data_conversion_ukb()
     # data_conversion_ukb_masks()
     # stack_ukb_3D_modalities()
-    data_conversion_brats(split='train')
+    #data_conversion_brats(split='train')
     # data_conversion_brats(split='test')
+    training_data_generation_pancreas()
