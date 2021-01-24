@@ -1,7 +1,6 @@
 {
   "algorithm": "simclr",
-  "base_workspace": "/home/Yamen.Ali/workspace",
-  "data_dir": "/home/Yamen.Ali/imagesTr_full_resized",
+  "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/images_resized_128",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "crop_and_resize", "keep_original",
@@ -9,20 +8,21 @@
     "apply_sobel_filter", "cut_out", "global_pair"
   ],
   "loss_function_name": "contrastive_loss_batch_level",
+  "use_cpu": true,
 
   "data_is_3D": true,
   "temprature": 0.05,
 
-  "code_size": 128,
-  "enc_filters": 16,
+  "code_size": 5,
+  "enc_filters": 2,
   "patches_per_side": 4,
   "data_dim": 128,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
-  "batch_size": 4,
-  "embed_dim": 64,
+  "batch_size": 2,
+  "embed_dim": 10,
 
   "lr": 1e-4,
-  "epochs": 1000
+  "epochs": 1
 }
