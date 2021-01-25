@@ -1,6 +1,6 @@
 {
   "algorithm": "simclr",
-  "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/images_resized_128",
+  "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "crop_and_resize", "keep_original",

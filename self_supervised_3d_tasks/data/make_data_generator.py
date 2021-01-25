@@ -18,9 +18,13 @@ def get_data_generators_internal(data_path, files, data_generator, train_split=N
         val_split = int(len(files) * val_split)
 
         # Create lists
+        print(f'All {files}')
         train = files[0:train_split]
+        print(f'Train {train}')
         val = files[train_split:train_split + val_split]
+        print(f'Val {val}')
         test = files[train_split + val_split:]
+        print(f'Test {test}')
 
         # create generators
         train_data_generator = data_generator(data_path, train, **train_data_generator_args)

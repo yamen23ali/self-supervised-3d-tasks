@@ -1,0 +1,37 @@
+{
+  "algorithm": "simclr",
+  "data_dir_train": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train",
+  "data_dir_test": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/test",
+  "model_checkpoint": "/Users/d070867/netstore/workspace/simclr_pancreas3d/weights-improvement-001.hdf5",
+  "dataset_name": "pancreas3d",
+  "use_cpu": true,
+
+  "data_is_3D": true,
+  "val_split": 0.2,
+
+  "code_size": 5,
+  "enc_filters": 2,
+  "patches_per_side": 4,
+  "data_dim": 128,
+
+  "loss": "weighted_dice_loss",
+  "scores": ["dice", "jaccard", "dice_pancreas_0", "dice_pancreas_1", "dice_pancreas_2"],
+  "metrics": ["accuracy", "weighted_dice_coefficient", "weighted_dice_coefficient_per_class_pancreas"],
+
+  "top_architecture": "big_fully",
+  "prediction_architecture": "unet_3d_upconv",
+  "pooling": "max",
+  "number_channels": 1,
+  "batch_size": 2,
+
+  "exp_splits": [50,25],
+  "lr": 1e-3,
+  "epochs_initialized": 2,
+  "epochs_frozen": 0,
+  "epochs_random": 0,
+  "epochs_warmup": 1,
+  "repetitions": 3,
+
+  "clipnorm": 1,
+  "clipvalue": 1
+}
