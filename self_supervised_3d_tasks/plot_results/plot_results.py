@@ -184,16 +184,16 @@ if __name__ == "__main__":
     cpc_label = "cpc"
     cpc_2d_path = "~/workspace/self-supervised-3d-tasks/cpc_kaggle_retina/weights-250_test_4/"
     cpc_3d_path = "~/workspace/self-supervised-3d-tasks/cpc_pancreas3d_18/weights-400_test_3"
-    combined_labels.append(cpc_label)
-    combined_2d_path.append(cpc_2d_path)
-    combined_3d_path.append(cpc_3d_path)
+    #combined_labels.append(cpc_label)
+    #combined_2d_path.append(cpc_2d_path)
+    #combined_3d_path.append(cpc_3d_path)
 
     jigsaw_label = "jigsaw"
     jigsaw_2d_path = "~/workspace/self-supervised-3d-tasks/jigsaw_kaggle_retina/weights-improvement-929_test_3/"
     jigsaw_3d_path = "~/workspace/self-supervised-3d-tasks/jigsaw_pancreas3d_9/weights-improvement-671_test_13"
-    combined_labels.append(jigsaw_label)
-    combined_2d_path.append(jigsaw_2d_path)
-    combined_3d_path.append(jigsaw_3d_path)
+    #combined_labels.append(jigsaw_label)
+    #combined_2d_path.append(jigsaw_2d_path)
+    #combined_3d_path.append(jigsaw_3d_path)
 
     rotation_label = "rotation"
     rotation_2d_path = "~/workspace/self-supervised-3d-tasks/rotation_kaggle_retina/weights-improvement-837_test_12/"
@@ -205,53 +205,64 @@ if __name__ == "__main__":
     rpl_label = "rpl"
     rpl_2d_path = "~/workspace/self-supervised-3d-tasks/rpl_kaggle_retina/weights-improvement-879_test_16/"
     rpl_3d_path = "~/workspace/self-supervised-3d-tasks/rpl_pancreas3d_9/weights-improvement-936_test_28"
-    combined_labels.append(rpl_label)
-    combined_2d_path.append(rpl_2d_path)
-    combined_3d_path.append(rpl_3d_path)
+    #combined_labels.append(rpl_label)
+    #combined_2d_path.append(rpl_2d_path)
+    #combined_3d_path.append(rpl_3d_path)
 
     exemplar_label = "exemplar"
     exemplar_2d_path = "~/workspace/self-supervised-3d-tasks/exemplar_kaggle_retina/weights-improvement-641_test/"
     exemplar_3d_path = "~/workspace/self-supervised-3d-tasks/exemplar_pancreas3d_42/weights-300_test_3"
-    combined_labels.append(exemplar_label)
-    combined_2d_path.append(exemplar_2d_path)
-    combined_3d_path.append(exemplar_3d_path)
+    #combined_labels.append(exemplar_label)
+    #combined_2d_path.append(exemplar_2d_path)
+    #combined_3d_path.append(exemplar_3d_path)
+
+    simclr_vloss_label = "simclr_vloss"
+    simclr_vloss_3d_path = "~/workspace/self-supervised-3d-tasks/jigsaw_pancreas3d_9/weights-improvement-671_test_13"
+    combined_labels.append(simclr_vloss_label)
+    combined_3d_path.append(simclr_vloss_3d_path)
+
+    simclr_bloss_label = "simclr_bloss"
+    simclr_bloss_3d_path = "~/workspace/self-supervised-3d-tasks/jigsaw_pancreas3d_9/weights-improvement-671_test_13"
+    combined_labels.append(simclr_bloss_label)
+    combined_3d_path.append(simclr_bloss_3d_path)
 
     baseline_label = "baseline"
     baseline_2d_path = "~/workspace/random_test_3/"
     baseline_3d_path = "~/workspace/random_test_3D/"
-    combined_labels.append(baseline_label)
-    combined_2d_path.append(baseline_2d_path)
-    combined_3d_path.append(baseline_3d_path)
+    #combined_labels.append(baseline_label)
+    #combined_2d_path.append(baseline_2d_path)
+    #combined_3d_path.append(baseline_3d_path)
+
 
     cpc_new_label = "cpc 2D Slices"
     cpc_new_3d_path = "~/workspace/self-supervised-3d-tasks/cpc_pancreas2d_1/weights-250_test"
-    combined_labels.append(cpc_new_label)
-    combined_3d_path.append(cpc_new_3d_path)
+    #combined_labels.append(cpc_new_label)
+    #combined_3d_path.append(cpc_new_3d_path)
 
     jig_new_label = "jigsaw 2D Slices"
     jig_new_3d_path = "~/workspace/self-supervised-3d-tasks/jigsaw_pancreas2d_3/weights-improvement-246_test"
-    combined_labels.append(jig_new_label)
-    combined_3d_path.append(jig_new_3d_path)
+    #combined_labels.append(jig_new_label)
+    #combined_3d_path.append(jig_new_3d_path)
 
     rot_new_label = "rotation 2D Slices"
     rot_new_3d_path = "~/workspace/self-supervised-3d-tasks/rotation_pancreas2d_9/weights-improvement-250_test_3"
-    combined_labels.append(rot_new_label)
-    combined_3d_path.append(rot_new_3d_path)
+    #combined_labels.append(rot_new_label)
+    #combined_3d_path.append(rot_new_3d_path)
 
     rpl_new_label = "rpl 2D Slices"
     rpl_new_3d_path = "~/workspace/self-supervised-3d-tasks/rpl_pancreas2d_5/weights-improvement-241_test_1"
-    combined_labels.append(rpl_new_label)
-    combined_3d_path.append(rpl_new_3d_path)
+    #combined_labels.append(rpl_new_label)
+    #combined_3d_path.append(rpl_new_3d_path)
 
     exp_new_label = "exemplar 2D Slices"
     exp_new_3d_path = "~/workspace/self-supervised-3d-tasks/exemplar_pancreas2d/weights-improvement-235_test"
-    combined_labels.append(exp_new_label)
-    combined_3d_path.append(exp_new_3d_path)
+    #combined_labels.append(exp_new_label)
+    #combined_3d_path.append(exp_new_3d_path)
 
     baseline_new_label = "baseline 2D Slices"
     baseline_new_3d_path = "~/workspace/random_test_6"
-    combined_labels.append(baseline_new_label)
-    combined_3d_path.append(baseline_new_3d_path)
+    #combined_labels.append(baseline_new_label)
+    #combined_3d_path.append(baseline_new_3d_path)
 
     split_2d_metric = "Weights_initialized_qw_kappa_kaggle_avg"
     split_2d_metric_name = "Avg Qw Kappa"
