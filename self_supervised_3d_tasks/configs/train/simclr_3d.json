@@ -1,7 +1,7 @@
 {
   "algorithm": "simclr",
-  "base_workspace": "/home/Yamen.Ali/workspace",
-  "data_dir": "/home/Yamen.Ali/imagesTr_full_resized",
+  "base_workspace": "/home/Yamen.Ali/workspace/",
+  "data_dir": "/home/Yamen.Ali/processed_images/train",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "crop_and_resize", "keep_original",

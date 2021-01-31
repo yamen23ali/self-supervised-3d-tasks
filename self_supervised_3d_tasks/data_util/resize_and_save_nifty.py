@@ -114,9 +114,9 @@ def data_generation_pancreas_2D_slices():
 
 
 def data_generation_pancreas():
-    result_path = "/content/gdrive/My Drive/Thesis/images_resized_128_labeled"
-    path_to_data = "/content/gdrive/My Drive/Thesis/imagesTr_full"
-    path_to_labels = "/content/gdrive/My Drive/Thesis/labelsTr_full"
+    result_path = "/mnt/mpws2019cl1/Task07_Pancreas/images_resized_128_labeled"
+    path_to_data = "/mnt/mpws2019cl1/Task07_Pancreas/imagesTr"
+    path_to_labels = "/mnt/mpws2019cl1/Task07_Pancreas/labelsTr"
 
     dim = (128, 128, 128)
     list_files_temp = os.listdir(path_to_data)
@@ -154,29 +154,34 @@ def data_generation_pancreas():
             traceback.print_tb(e.__traceback__)
             continue
 
-def training_data_generation_pancreas():
-    path_to_data = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/imagesTr_full"
-    result_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/imagesTr_full_resized"
-
+def read_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path):
     dim = (128, 128, 128)
-    list_files_temp = os.listdir(path_to_data)
+    for i, file_name in enumerate(files):
+        path_to_image = "{}/{}".format(data_path, file_name)
+        path_to_label = "{}/{}".format(lables_path, file_name)
 
-    for i, file_name in enumerate(list_files_temp):
-        path_to_image = "{}/{}".format(path_to_data, file_name)
         try:
             img = nib.load(path_to_image)
             img = img.get_fdata()
 
+            label = nib.load(path_to_label)
+            label = label.get_fdata()
+
             img, bb = read_scan_find_bbox(img)
+            label = label[bb[0]:bb[1], bb[2]:bb[3], bb[4]:bb[5]]
 
             img = skTrans.resize(img, dim, order=1, preserve_range=True)
+            label = skTrans.resize(label, dim, order=1, preserve_range=True)
 
             result = np.expand_dims(img, axis=3)
+            label_result = np.expand_dims(label, axis=3)
 
             file_name = file_name[:file_name.index('.')] + ".npy"
-            np.save("{}/{}".format(result_path, file_name), result)
+            label_file_name = file_name[:file_name.index('.')] + "_label.npy"
+            np.save("{}/{}".format(save_images_path, file_name), result)
+            np.save("{}/{}".format(save_labels_path, label_file_name), label_result)
 
-            perc = (float(i) * 100.0) / len(list_files_temp)
+            perc = (float(i) * 100.0) / len(files)
             print(f"{perc:.2f} % done")
 
         except Exception as e:
@@ -184,6 +189,27 @@ def training_data_generation_pancreas():
             traceback.print_tb(e.__traceback__)
             continue
 
+def prepare_pancreas_data():
+    training_images_path = "/home/Yamen.Ali/processed_images/train"
+    training_labels_path = "/home/Yamen.Ali/processed_images/train_labels"
+    test_images_path = "/home/Yamen.Ali/processed_images/test"
+    test_labels_path = "/home/Yamen.Ali/processed_images/test_labels"
+
+    path_to_data = "/home/Yamen.Ali/imagesTr"
+    path_to_labels = "/home/Yamen.Ali/processed_images/labelsTr"
+
+    list_files_temp = np.array(os.listdir(path_to_data))
+
+    test_files_indices = np.random.choice(len(list_files_temp), size=20, replace=False)
+    test_files = list_files_temp[test_files_indices]
+
+    train_files = np.delete(list_files_temp, test_files_indices)
+
+    print(f'Test files are {test_files}')
+    print(f'Train files are {train_files}')
+
+    read_and_store_pancreas(train_files, path_to_data, path_to_labels, training_images_path, training_labels_path)
+    read_and_store_pancreas(test_files, path_to_data, path_to_labels, test_images_path, test_labels_path)
 
 def crop_one_volume(volume, volume_size, volume_for_resize=None):
     """
@@ -457,4 +483,4 @@ if __name__ == "__main__":
     # stack_ukb_3D_modalities()
     #data_conversion_brats(split='train')
     # data_conversion_brats(split='test')
-    training_data_generation_pancreas()
+    prepare_pancreas_data()
