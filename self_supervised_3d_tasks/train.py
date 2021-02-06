@@ -1,5 +1,6 @@
 import numpy as np
-np.random.seed(237)
+import tensorflow as tf
+import random
 
 from self_supervised_3d_tasks.data.numpy_2d_loader import Numpy2DLoader
 from self_supervised_3d_tasks.utils.model_utils import init, print_flat_summary
@@ -52,6 +53,11 @@ def get_dataset(data_dir, batch_size, f_train, f_val, train_val_split, dataset_n
 def train_model(algorithm, data_dir, dataset_name, root_config_file, epochs=250, batch_size=2, train_val_split=0.9,
                 base_workspace="~/netstore/workspace/", save_checkpoint_every_n_epochs=5, **kwargs):
     kwargs["root_config_file"] = root_config_file
+
+    #Set same seed to have all training done aginst same initial weights
+    np.random.seed(237)
+    tf.random.set_seed(39)
+    random.seed(46)
 
     working_dir = get_writing_path(Path(base_workspace).expanduser() / (algorithm + "_" + dataset_name),
                                    root_config_file)

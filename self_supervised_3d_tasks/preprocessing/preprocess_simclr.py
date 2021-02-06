@@ -130,8 +130,12 @@ def apply_sobel_filter(patch, **kwargs):
     dz = sobel(patch, 2)
 
     magnitued = np.sqrt(dx**2 + dy**2 + dz**2)
+    max_magnitued = np.max(magnitued)
 
-    return magnitued * (1.0 / np.max(magnitued))
+    if max_magnitued == 0.0:
+        return magnitued
+    else:
+        return magnitued * (1.0 / max_magnitued)
 
 def adjust_brightness(patch, max_delta=0.125, **kwargs):
     delta = np.random.uniform(-max_delta, max_delta)

@@ -1,8 +1,8 @@
 {
   "algorithm": "simclr",
-  "data_dir_train": "/home/Yamen.Ali/processed_images/train",
-  "data_dir_test": "/home/Yamen.Ali/processed_images/test",
-  "model_checkpoint": "/home/Yamen.Ali/workspace/simclr_pancreas3d_7/weights-improvement-982.hdf5",
+  "data_dir_train": "/home/Yamen.Ali/netstore/processed_images/train",
+  "data_dir_test": "/home/Yamen.Ali/netstore/processed_images/test",
+  "model_checkpoint": "/home/Yamen.Ali/netstore/workspace_vm03/simclr_pancreas3d_7/weights-improvement-982.hdf5",
   "dataset_name": "pancreas3d",
 
   "data_is_3D": true,
@@ -11,11 +11,15 @@
   "code_size": 128,
   "enc_filters": 16,
   "patches_per_side": 4,
-  "data_dim": 128,
+  "data_dim": 64,
+  "num_layers": 3,
 
   "loss": "weighted_dice_loss",
   "scores": ["dice", "jaccard", "dice_pancreas_0", "dice_pancreas_1", "dice_pancreas_2"],
   "metrics": ["accuracy", "weighted_dice_coefficient", "weighted_dice_coefficient_per_class_pancreas"],
+  "train_data_generator_args": { "classes_num": 3},
+  "val_data_generator_args": { "classes_num": 3},
+  "test_data_generator_args": { "classes_num": 3},
 
   "top_architecture": "big_fully",
   "prediction_architecture": "unet_3d_upconv",

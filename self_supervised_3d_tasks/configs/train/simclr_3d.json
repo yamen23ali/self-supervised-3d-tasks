@@ -1,7 +1,7 @@
 {
   "algorithm": "simclr",
-  "base_workspace": "/home/Yamen.Ali/workspace/",
-  "data_dir": "/home/Yamen.Ali/processed_images/train",
+  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm01/",
+  "data_dir": "/home/Yamen.Ali/netstore/processed_images/train",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "keep_original",
@@ -16,7 +16,8 @@
   "code_size": 128,
   "enc_filters": 16,
   "patches_per_side": 4,
-  "data_dim": 128,
+  "data_dim": 64,
+  "num_layers": 3,
 
   "top_architecture": "big_fully",
   "number_channels": 1,

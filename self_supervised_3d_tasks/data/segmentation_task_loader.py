@@ -15,13 +15,15 @@ class SegmentationGenerator3D(DataGeneratorBase):
             pre_proc_func=None,
             shuffle=False,
             augment=False,
-            label_stem="_label"
+            label_stem="_label",
+            classes_num = None
     ):
         self.augment_scans_train = augment
 
         self.label_stem = label_stem
         self.label_dir = data_path + "_labels"
         self.data_dir = data_path
+        self.classes_num = classes_num
 
         super(SegmentationGenerator3D, self).__init__(file_list, batch_size, shuffle, pre_proc_func)
 
@@ -85,6 +87,7 @@ class SegmentationGenerator3D(DataGeneratorBase):
             img = (img - img.min()) / (img.max() - img.min())
             if self.augment_scans_train:
                 img, mask = self.augment_3d(img, mask)
+
             data_x.append(img)
             data_y.append(mask)
 
@@ -92,8 +95,11 @@ class SegmentationGenerator3D(DataGeneratorBase):
         data_y = np.stack(data_y)
 
         data_y = np.rint(data_y).astype(np.int)
-        n_classes = np.max(data_y) + 1
-        data_y = np.eye(n_classes)[data_y]
+
+        if self.classes_num == None:
+            self.classes_num = np.max(data_y) + 1
+
+        data_y = np.eye(self.classes_num)[data_y]
         if data_y.shape[-2] == 1:
             data_y = np.squeeze(data_y, axis=-2)  # remove second last axis, which is still 1
 
