@@ -291,8 +291,8 @@ def prepare_pancreas_data():
     test_images_path = "/home/Yamen.Ali/netstore/processed_images/test"
     test_labels_path = "/home/Yamen.Ali/netstore/processed_images/test_labels"
 
-    images_path = "/home/Yamen.Ali/netstore/imagesTr"
-    labels_path = "/home/Yamen.Ali/netstore/labelsTr"
+    images_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/imagesTr"
+    labels_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/labelsTr"
     
 
     '''
