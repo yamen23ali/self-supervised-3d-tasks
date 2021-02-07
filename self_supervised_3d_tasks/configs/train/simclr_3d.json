@@ -16,8 +16,8 @@
   "code_size": 128,
   "enc_filters": 16,
   "patches_per_side": 4,
-  "data_dim": 64,
-  "num_layers": 3,
+  "data_dim": 128,
+  "num_layers": 4,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
@@ -25,5 +25,5 @@
   "embed_dim": 64,
 
   "lr": 3e-4,
-  "epochs": 1000
+  "epochs": 2000
 }

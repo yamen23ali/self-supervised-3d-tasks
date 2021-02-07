@@ -10,6 +10,7 @@ import nibabel as nib
 import numpy as np
 import skimage.transform as skTrans
 from joblib import Parallel, delayed
+import math
 
 from self_supervised_3d_tasks.data_util.nifti_utils import read_scan_find_bbox
 
@@ -155,7 +156,61 @@ def data_generation_pancreas():
             traceback.print_tb(e.__traceback__)
             continue
 
-def read_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path):
+def get_cutted_image(image, crop_size):
+    cutted_image_shape = []
+    original_shape = list(image.shape)
+
+    for dim_shape in original_shape:
+        if (dim_shape % crop_size == 0) or (dim_shape % crop_size > crop_size//2):
+            cutted_image_shape.append(dim_shape)
+        else:
+            wanted_shape = (dim_shape//crop_size)*crop_size
+            cutted_image_shape.append(wanted_shape)
+
+    return image[:cutted_image_shape[0], :cutted_image_shape[1], :cutted_image_shape[2]]
+
+def get_padded_image(image, crop_size):
+    padded_image_shape = []
+    original_shape = list(image.shape)
+
+    for dim_shape in original_shape:
+        if dim_shape % crop_size == 0:
+            padded_image_shape.append(dim_shape)
+        else:
+            wanted_shape = ((dim_shape//crop_size)+1)*crop_size
+            padded_image_shape.append(wanted_shape)
+
+    padded_image = np.zeros(padded_image_shape)
+    padded_image[:original_shape[0], :original_shape[1], :original_shape[2]] = image
+
+    return padded_image
+
+def crop_image(image, label, crop_size):
+    image_crops = []
+    label_crops = []
+
+    x_crops =  int(image.shape[0] / crop_size)
+    y_crops = int(image.shape[1] / crop_size)
+    z_crops = int(image.shape[2] / crop_size)
+
+    for i in range(x_crops):
+        x_start = i*crop_size
+        x_end = x_start + crop_size
+
+        for j in range(y_crops):
+            y_start = j*crop_size
+            y_end = y_start + crop_size
+
+            for k in range(z_crops):
+                z_start = k*crop_size
+                z_end = z_start + crop_size
+
+                image_crops.append( image[x_start:x_end, y_start:y_end, z_start:z_end] )
+                label_crops.append( label[x_start:x_end, y_start:y_end, z_start:z_end] )
+
+    return image_crops, label_crops
+
+def read_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path, patch_size=32):
     dim = (128, 128, 128)
     for i, file_name in enumerate(files):
         path_to_image = "{}/{}".format(data_path, file_name)
@@ -190,49 +245,7 @@ def read_and_store_pancreas(files, data_path , lables_path, save_images_path, sa
             traceback.print_tb(e.__traceback__)
             continue
 
-def crop_3d_sample(image, label):
-    """"
-    Crop a 3D image and its corresponding 3D label into same sized 3D images/labels
-    We get the min size dimension and crop the image/label along the other 2 dimensions
-    """
-    image_crops = []
-    label_crops = []
-
-    ## Get min dimensions and keep the other 2
-    image_shape = list(image.shape)
-    min_dimension = min(image_shape)
-    min_dimension_ind = image_shape.index(min_dimension)
-    del image_shape[min_dimension_ind]
-
-    ## Figure out how many crops we want to do along each of the remaning dimensions (i.e. none min)
-    first_dim_crops =  int(image_shape[0] / min_dimension)
-    second_dim_crops = int(image_shape[1] / min_dimension)
-
-    ## Take image crops and their corresponding label crops
-    for i in range(first_dim_crops):
-        start_indx_1 = i*min_dimension
-        end_indx_1 = start_indx_1 + min_dimension
-
-        for j in range(second_dim_crops):
-            start_indx_2 = j*min_dimension
-            end_indx_2 = start_indx_2 + min_dimension
-
-            if min_dimension_ind == 0:
-                image_crops.append( image[:, start_indx_1:end_indx_1, start_indx_2:end_indx_2] )
-                label_crops.append( label[:, start_indx_1:end_indx_1, start_indx_2:end_indx_2] )
-            elif min_dimension_ind == 1:
-                image_crops.append( image[start_indx_1:end_indx_1, :, start_indx_2:end_indx_2] )
-                label_crops.append( label[start_indx_1:end_indx_1, :, start_indx_2:end_indx_2] )
-            else:
-                image_crops.append( image[start_indx_1:end_indx_1, start_indx_2:end_indx_2, :] )
-                label_crops.append( label[start_indx_1:end_indx_1, start_indx_2:end_indx_2, :] )
-
-    return image_crops, label_crops
-
-def crop_resize_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path):
-    #dim = (128, 128, 128)
-    dim = (64, 64, 64)
-
+def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path, crop_size=128):
     for i, file_name in enumerate(files):
         path_to_image = "{}/{}".format(data_path, file_name)
         path_to_label = "{}/{}".format(lables_path, file_name)
@@ -247,14 +260,16 @@ def crop_resize_and_store_pancreas(files, data_path , lables_path, save_images_p
             img, bb = read_scan_find_bbox(img)
             label = label[bb[0]:bb[1], bb[2]:bb[3], bb[4]:bb[5]]
 
-            img_crops, label_crops = crop_3d_sample(img, label)
+            img = get_cutted_image(img, crop_size)
+            img = get_padded_image(img, crop_size)
+            label = get_cutted_image(label, crop_size)
+            label = get_padded_image(label, crop_size)
 
-            for j in range(len(img_crops)):
-                img = skTrans.resize(img_crops[j], dim, order=1, preserve_range=True)
-                label = skTrans.resize(label_crops[j], dim, order=1, preserve_range=True)
+            image_crops, label_crops = crop_image(img, label, crop_size)
 
-                result = np.expand_dims(img, axis=3)
-                label_result = np.expand_dims(label, axis=3)
+            for j in range(len(image_crops)):
+                result = np.expand_dims(image_crops[j], axis=3)
+                label_result = np.expand_dims(label_crops[j], axis=3)
 
                 image_file_name = file_name[:file_name.index('.')] + f"_{j}.npy"
                 label_file_name = file_name[:file_name.index('.')] + f"_{j}_label.npy"
@@ -266,26 +281,11 @@ def crop_resize_and_store_pancreas(files, data_path , lables_path, save_images_p
 
         except Exception as e:
             print("Error while loading image {}.".format(path_to_image))
+            print(e)
             traceback.print_tb(e.__traceback__)
             continue
-
-def get_min_dimension_stats(images_path):
-    files = np.array(os.listdir(images_path))
-    shapes = []
-    for i, file_name in enumerate(files):
-        path_to_image = "{}/{}".format(images_path, file_name)
-        try:
-            img = nib.load(path_to_image)
-            img = img.get_fdata()
-            shapes.append(min(img.shape))
-        except Exception as e:
-            print("Error while loading image {}.".format(path_to_image))
-            traceback.print_tb(e.__traceback__)
-            continue
-    return collections.Counter(shapes)
 
 def prepare_pancreas_data():
-    '''
     training_images_path = "/home/Yamen.Ali/processed_images/train"
     training_labels_path = "/home/Yamen.Ali/processed_images/train_labels"
     test_images_path = "/home/Yamen.Ali/processed_images/test"
@@ -293,8 +293,8 @@ def prepare_pancreas_data():
 
     images_path = "/home/Yamen.Ali/imagesTr"
     labels_path = "/home/Yamen.Ali/processed_images/labelsTr"
-    '''
 
+    '''
     training_images_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train"
     training_labels_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train_labels"
     test_images_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/test"
@@ -302,18 +302,20 @@ def prepare_pancreas_data():
 
     images_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/imagesTr"
     labels_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/labelsTr"
+    '''
 
     list_files_temp = np.array(os.listdir(images_path))
+
 
     test_files_indices = np.random.choice(len(list_files_temp), size=40, replace=False)
     test_files = list_files_temp[test_files_indices]
 
     train_files = np.delete(list_files_temp, test_files_indices)
 
-    #read_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
-    #read_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
-    crop_resize_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
-    crop_resize_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
+    #train_files = ["pancreas_001.nii.gz"]
+
+    preprocess_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
+    preprocess_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
 
 def crop_one_volume(volume, volume_size, volume_for_resize=None):
     """
