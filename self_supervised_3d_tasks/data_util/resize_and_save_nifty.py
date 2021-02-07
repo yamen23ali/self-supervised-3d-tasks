@@ -286,13 +286,14 @@ def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_pa
             continue
 
 def prepare_pancreas_data():
-    training_images_path = "/home/Yamen.Ali/processed_images/train"
-    training_labels_path = "/home/Yamen.Ali/processed_images/train_labels"
-    test_images_path = "/home/Yamen.Ali/processed_images/test"
-    test_labels_path = "/home/Yamen.Ali/processed_images/test_labels"
 
-    images_path = "/home/Yamen.Ali/imagesTr"
-    labels_path = "/home/Yamen.Ali/processed_images/labelsTr"
+    training_images_path = "/home/Yamen.Ali/netstore/processed_images/train"
+    training_labels_path = "/home/Yamen.Ali/netstore/processed_images/train_labels"
+    test_images_path = "/home/Yamen.Ali/netstore/processed_images/test"
+    test_labels_path = "/home/Yamen.Ali/netstore/processed_images/test_labels"
+
+    images_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/imagesTr"
+    labels_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/labelsTr"
 
     '''
     training_images_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train"
