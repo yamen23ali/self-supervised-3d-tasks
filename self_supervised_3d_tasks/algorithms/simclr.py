@@ -40,7 +40,8 @@ class SimclrBuilder(AlgorithmBuilderBase):
         self.patches_number = patches_per_side * patches_per_side * patches_per_side * 2
 
         self.patch_dim = int(self.data_dim / patches_per_side)
-        self.patch_shape_3d = (self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels)
+        #self.patch_shape_3d = (self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels)
+        self.patch_shape_3d = (128, 128, 128, 1)
 
         self.inverse_eye = 1 - K.eye(self.patches_number)
         self.inverse_eye = K.expand_dims(self.inverse_eye, 0)
@@ -58,13 +59,13 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return self.apply_prediction_model_to_encoder(self.enc_model)
 
     def apply_prediction_model_to_encoder(self, encoder_model):
-        x_input = Input((self.patches_number, self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels))
+        x_input = Input((128,128,128,1))
 
         model_with_embed_dim = Sequential([encoder_model, Flatten(), Dense(self.code_size)])
 
-        x_encoded = TimeDistributed(model_with_embed_dim)(x_input)
+        x_encoded = model_with_embed_dim(x_input)
 
-        x_encoded = Lambda(self.reshape_predictions)(x_encoded)
+        #x_encoded = Lambda(self.reshape_predictions)(x_encoded)
 
         simclr_model = keras.models.Model(inputs=x_input, outputs=x_encoded)
 

@@ -207,40 +207,37 @@ def preprocess_3d_batch_level_loss(batch, patches_per_side, augmentations_names)
     assert w == h and h == d, "accepting only cube volumes"
 
     volumes = []
-    augmented_volumes_patches = []
+    augmented_volumes = []
+    augmented_volumes_1 = []
+    augmented_volumes_2 = []
 
     # Convert the augmentations names we get from config file to functions
     augmentations = get_augmentations(augmentations_names)
 
-    for volume in batch:
-        volumes.append(crop_patches_3d(volume, patches_per_side))
+    #for volume in batch:
+    #    volumes.append(crop_patches_3d(volume, patches_per_side))
 
-    for volume_index, volume_patches in enumerate(volumes):
-        augmented_patches_1 = []
-        augmented_patches_2 = []
-        for patch_index, patch in enumerate(volume_patches):
-            patch = np.array(patch)
+    for volume_index, volume in enumerate(batch):
+        selected_indices = np.random.choice(len(augmentations), size=2, replace=False)
+        selected_augmentations = augmentations[selected_indices]
 
-            selected_indices = np.random.choice(len(augmentations), size=2, replace=False)
-            selected_augmentations = augmentations[selected_indices]
-
-            augmented_patches_1.append(
-                selected_augmentations[0](
-                    patch=patch, patch_index=patch_index,
-                    volume_index=volume_index, volumes=volumes
-                )
+        augmented_volumes_1.append(
+            selected_augmentations[0](
+                patch=volume, patch_index=volume_index,
+                volume_index=volume_index, volumes=volumes
             )
-            augmented_patches_2.append(
-                selected_augmentations[1](
-                    patch=patch, patch_index=patch_index,
-                    volume_index=volume_index, volumes=volumes
-                )
+        )
+
+        augmented_volumes_2.append(
+            selected_augmentations[1](
+                patch=volume, patch_index=volume_index,
+                volume_index=volume_index, volumes=volumes
             )
+        )
 
-        augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
-        augmented_volumes_patches.append(augmented_volume_patches)
+        augmented_volumes = np.concatenate((augmented_volumes_1, augmented_volumes_2), axis=0)
 
-    return np.array(augmented_volumes_patches), np.zeros(len(batch))
+    return np.array(augmented_volumes), np.zeros(2*len(batch))
 
 def preprocess_3d_volume_level_loss(batch, patches_per_side, augmentations_names):
     _, w, h, d, _ = batch.shape
