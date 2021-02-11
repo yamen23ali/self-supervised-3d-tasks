@@ -17,7 +17,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
             data_dim=384,
             number_channels=3,
             crop_size=None,
-            patches_per_side=7,
+            patches_in_depth=7,
             code_size=1024,
             lr=1e-3,
             data_is_3D=False,
@@ -34,13 +34,15 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
         self.temprature = temprature
         self.augmentations = augmentations
-        self.patches_per_side = patches_per_side
+        self.patches_in_depth = patches_in_depth
         self.code_size = code_size
         self.number_channels = number_channels
-        self.patches_number = patches_per_side * patches_per_side * patches_per_side * 2
+        self.patches_number = patches_in_depth * 2
 
-        self.patch_dim = int(self.data_dim / patches_per_side)
-        self.patch_shape_3d = (self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels)
+        depth_dim = int(data_dim / patches_in_depth)
+        self.patch_shape_3d = (data_dim, data_dim, depth_dim, self.number_channels)
+        self.input_shape = (self.patches_number, data_dim, data_dim, depth_dim, self.number_channels)
+        print(self.input_shape)
 
         self.inverse_eye = 1 - K.eye(self.patches_number)
         self.inverse_eye = K.expand_dims(self.inverse_eye, 0)
@@ -58,7 +60,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return self.apply_prediction_model_to_encoder(self.enc_model)
 
     def apply_prediction_model_to_encoder(self, encoder_model):
-        x_input = Input((self.patches_number, self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels))
+        x_input = Input(self.input_shape)
 
         model_with_embed_dim = Sequential([encoder_model, Flatten(), Dense(self.code_size)])
 
@@ -173,9 +175,9 @@ class SimclrBuilder(AlgorithmBuilderBase):
     def get_training_preprocessing(self):
         def f_3d(x, y):
             if self.loss_function == self.contrastive_loss_volume_level:
-                return preprocess_3d_volume_level_loss(x, self.patches_per_side, self.augmentations)
+                return preprocess_3d_volume_level_loss(x, self.patches_in_depth, self.augmentations)
 
-            return preprocess_3d_batch_level_loss(x, self.patches_per_side, self.augmentations)
+            return preprocess_3d_batch_level_loss(x, self.patches_in_depth, self.augmentations)
 
         return f_3d, f_3d
 

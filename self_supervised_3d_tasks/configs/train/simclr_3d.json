@@ -13,15 +13,15 @@
   "data_is_3D": true,
   "temprature": 0.05,
 
-  "code_size": 128,
-  "enc_filters": 16,
-  "patches_per_side": 4,
+  "code_size": 256,
+  "enc_filters": 4,
+  "patches_in_depth": 16,
   "data_dim": 128,
-  "num_layers": 4,
+  "num_layers": 2,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
-  "batch_size": 2,
+  "batch_size": 32,
   "embed_dim": 64,
 
   "lr": 3e-4,

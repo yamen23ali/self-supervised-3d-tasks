@@ -9,26 +9,21 @@ from scipy.ndimage.filters import gaussian_filter, sobel
 
 thismodule = sys.modules[__name__]
 
-def crop_patches_3d(image, patches_per_side):
+def crop_in_depth(image, patches_in_depth):
     h, w, d, _ = image.shape
 
-    h_grid = h // patches_per_side
-    w_grid = w // patches_per_side
-    d_grid = d // patches_per_side
+    d_grid = d // patches_in_depth
 
     patches = []
-    for i in range(patches_per_side):
-        for j in range(patches_per_side):
-            for k in range(patches_per_side):
-
-                p = do_crop_3d(image,
-                            i * h_grid,
-                            j * w_grid,
-                            k * d_grid,
-                            h_grid,
-                            w_grid,
-                            d_grid)
-                patches.append(p)
+    for i in range(patches_in_depth):
+        p = do_crop_3d(image,
+                    0,
+                    0,
+                    i * d_grid,
+                    h,
+                    w,
+                    d_grid)
+        patches.append(p)
 
     return patches
 
@@ -59,23 +54,23 @@ def rotate_patch_3d(patch, **kwargs):
     rot = np.random.randint(1, 10)
 
     if rot == 1:
-        rotated_patch = np.transpose(np.flip(patch, 1), (1, 0, 2, 3))  # 90 deg Z
+        rotated_patch = np.transpose(np.flip(patch, 1), (1, 0, 2, 3))  # Rotate 90 deg Z
     elif rot == 2:
-        rotated_patch = np.flip(np.transpose(patch, (1, 0, 2, 3)), 1)  # -90 deg Z
+        rotated_patch = np.flip(np.transpose(patch, (1, 0, 2, 3)), 1)  # Rotate -90 deg Z
     elif rot == 3:
-        rotated_patch = np.flip(patch, (0, 1))  # 180 degrees on z axis
+        rotated_patch = np.flip(patch, (0, 1))  # Rotate 180 degrees on z axis
     elif rot == 4:
-        rotated_patch = np.transpose(np.flip(patch, 1), (0, 2, 1, 3))  # 90 deg X
+        rotated_patch = np.flip(patch, 0)  # Mirror on x
     elif rot == 5:
-        rotated_patch = np.flip(np.transpose(patch, (0, 2, 1, 3)), 1)  # -90 deg X
+        rotated_patch = np.flip(patch, 1)  # Mirror on y
     elif rot == 6:
-        rotated_patch = np.flip(patch, (1, 2))  # 180 degrees on x axis
+        rotated_patch = np.flip(patch, 2)  # Mirror on Z
     elif rot == 7:
-        rotated_patch = np.transpose(np.flip(patch, 0), (2, 1, 0, 3))  # 90 deg Y
+        rotated_patch = np.flip(patch, (0, 1, 2))  # Full miroring
     elif rot == 8:
-        rotated_patch = np.transpose(np.flip(patch, 0), (2, 1, 0, 3))  # -90 deg Y
+        rotated_patch = np.flip(patch, (1, 2))  # Rotate 180 degrees on x axis
     elif rot == 9:
-        rotated_patch = np.flip(patch, (0, 2))  # 180 degrees on y axis
+        rotated_patch = np.flip(patch, (0, 2))  # Rotate 180 degrees on y axis
 
     return rotated_patch
 
@@ -164,6 +159,9 @@ def cut_out(patch, alpha=4, **kwargs):
     max_cutout_length = int(patch.shape[0] / alpha)
     max_start = (patch.shape[0] - max_cutout_length) - 2 # To make sure no IndexOutOfBound occurs
 
+    max_cutout_length_z = int(patch.shape[2] / alpha)
+    max_start_z = (patch.shape[2] - max_cutout_length_z) - 2 # To make sure no IndexOutOfBound occurs
+
     # Select the starting point of the cropping randomly
     start_x = np.random.randint(0, max_start)
     end_x = start_x +  max_cutout_length
@@ -171,8 +169,8 @@ def cut_out(patch, alpha=4, **kwargs):
     start_y = np.random.randint(0, max_start)
     end_y = start_y + max_cutout_length
 
-    start_z = np.random.randint(0, max_start)
-    end_z = start_z +  max_cutout_length
+    start_z = np.random.randint(0, max_start_z)
+    end_z = start_z +  max_cutout_length_z
 
     cutout_pixels = np.zeros((end_x - start_x, end_y - start_y, end_z - start_z,1))
 
@@ -202,7 +200,7 @@ def keep_original(patch, **kwargs):
 def get_augmentations(augmentations_names):
     return np.array([getattr(thismodule, name) for name in augmentations_names])
 
-def preprocess_3d_batch_level_loss(batch, patches_per_side, augmentations_names):
+def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names):
     _, w, h, d, _ = batch.shape
     assert w == h and h == d, "accepting only cube volumes"
 
@@ -213,7 +211,7 @@ def preprocess_3d_batch_level_loss(batch, patches_per_side, augmentations_names)
     augmentations = get_augmentations(augmentations_names)
 
     for volume in batch:
-        volumes.append(crop_patches_3d(volume, patches_per_side))
+        volumes.append(crop_in_depth(volume, patches_in_depth))
 
     for volume_index, volume_patches in enumerate(volumes):
         augmented_patches_1 = []
@@ -242,7 +240,7 @@ def preprocess_3d_batch_level_loss(batch, patches_per_side, augmentations_names)
 
     return np.array(augmented_volumes_patches), np.zeros(len(batch))
 
-def preprocess_3d_volume_level_loss(batch, patches_per_side, augmentations_names):
+def preprocess_3d_volume_level_loss(batch, patches_in_depth, augmentations_names):
     _, w, h, d, _ = batch.shape
     assert w == h and h == d, "accepting only cube volumes"
 
@@ -253,7 +251,7 @@ def preprocess_3d_volume_level_loss(batch, patches_per_side, augmentations_names
     augmentations = get_augmentations(augmentations_names)
 
     for volume in batch:
-        volumes.append(crop_patches_3d(volume, patches_per_side))
+        volumes.append(crop_in_depth(volume, patches_in_depth))
 
     for volume_index, volume_patches in enumerate(volumes):
         augmented_volume_patches = []

@@ -3,11 +3,11 @@
   "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train",
   "dataset_name": "pancreas3d",
   "augmentations":[
-    "rotate_patch_3d", "crop_and_resize", "keep_original",
+    "rotate_patch_3d", "keep_original",
     "distort_color","apply_gaussian_blur", "add_gaussian_noise",
     "apply_sobel_filter", "cut_out", "global_pair"
   ],
-  "loss_function_name": "contrastive_loss_batch_level",
+  "loss_function_name": "contrastive_loss_volume_level",
   "use_cpu": true,
 
   "data_is_3D": true,
@@ -15,9 +15,9 @@
 
   "code_size": 5,
   "enc_filters": 2,
-  "patches_per_side": 4,
+  "patches_in_depth": 16,
   "data_dim": 128,
-  "num_layers": 4,
+  "num_layers": 2,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
