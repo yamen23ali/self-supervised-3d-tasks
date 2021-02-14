@@ -287,10 +287,10 @@ def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_pa
 
 def prepare_pancreas_data():
 
-    training_images_path = "/home/Yamen.Ali/netstore/processed_images/train"
-    training_labels_path = "/home/Yamen.Ali/netstore/processed_images/train_labels"
-    test_images_path = "/home/Yamen.Ali/netstore/processed_images/test"
-    test_labels_path = "/home/Yamen.Ali/netstore/processed_images/test_labels"
+    training_images_path = "/home/Yamen.Ali/netstore/processed_images_small/train"
+    training_labels_path = "/home/Yamen.Ali/netstore/processed_images_small/train_labels"
+    test_images_path = "/home/Yamen.Ali/netstore/processed_images_small/test"
+    test_labels_path = "/home/Yamen.Ali/netstore/processed_images_small/test_labels"
 
     images_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/imagesTr"
     labels_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/labelsTr"
@@ -306,9 +306,11 @@ def prepare_pancreas_data():
     '''
 
     list_files_temp = np.array(os.listdir(images_path))
+    selected_indices = np.random.choice(len(list_files_temp), size=90, replace=False)
+    list_files_temp = list_files_temp[selected_indices]
 
 
-    test_files_indices = np.random.choice(len(list_files_temp), size=40, replace=False)
+    test_files_indices = np.random.choice(len(list_files_temp), size=9, replace=False)
     test_files = list_files_temp[test_files_indices]
 
     train_files = np.delete(list_files_temp, test_files_indices)

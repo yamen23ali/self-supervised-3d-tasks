@@ -1,29 +1,29 @@
 {
   "algorithm": "simclr",
   "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm01/",
-  "data_dir": "/home/Yamen.Ali/netstore/processed_images/train",
+  "data_dir": "/home/Yamen.Ali/netstore/processed_images_small/train",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "keep_original",
     "distort_color","apply_gaussian_blur", "add_gaussian_noise",
     "apply_sobel_filter", "cut_out"
   ],
-  "loss_function_name": "contrastive_loss_volume_level",
+  "loss_function_name": "contrastive_loss_batch_level",
 
   "data_is_3D": true,
   "temprature": 0.05,
 
   "code_size": 256,
   "enc_filters": 4,
-  "patches_in_depth": 16,
+  "patches_in_depth": 8,
   "data_dim": 128,
-  "num_layers": 2,
+  "num_layers": 3,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
   "batch_size": 32,
   "embed_dim": 64,
 
-  "lr": 3e-4,
+  "lr": 3e-3,
   "epochs": 2000
 }
