@@ -116,6 +116,29 @@ def make_scores(y, y_pred, scores):
     scores_f = [(x, get_score(x)(y, y_pred)) for x in scores]
     return scores_f
 
+def get_scores_big_data(model, x_test, y_test, scores, step_size=40):
+    steps = int(len(x_test) / step_size)
+    scores_groups = {}
+
+    for i in range(0, steps):
+        start_indx = i*step_size
+        end_indx = start_indx + step_size
+        x_test_batch = x_test[start_indx:end_indx]
+        y_test_batch = y_test[start_indx:end_indx]
+
+        y_pred = model.predict(x_test_batch, batch_size=step_size)
+        scores_f = make_scores(y_test_batch, y_pred, scores)
+
+        for s in scores_f:
+            if s[0] not in scores_groups.keys():
+                scores_groups[s[0]] = []
+            scores_groups[s[0]].append(s[1])
+    scores_f = []
+    for key in scores_groups:
+        scores_f.append((key, np.array(scores_groups[key]).mean()))
+
+    return scores_f
+
 
 def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weights, x_test, y_test, lr,
                     batch_size, epochs, epochs_warmup, model_checkpoint, scores, loss, metrics, logging_path, kwargs,
@@ -202,8 +225,16 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
         )
 
     model.compile(optimizer=get_optimizer(clipnorm, clipvalue, lr), loss=loss, metrics=metrics)
-    y_pred = model.predict(x_test, batch_size=batch_size)
-    scores_f = make_scores(y_test, y_pred, scores)
+
+    # To handle big test data without OOM exceptions
+    scores_f = []
+    if len(x_test) > 50:
+        scores_f = get_scores_big_data(
+            model=model, x_test=x_test, y_test=y_test,
+            scores=scores, step_size=50)
+    else:
+        y_pred = model.predict(x_test, batch_size=batch_size)
+        scores_f = make_scores(y_test, y_pred, scores)
 
     if model_callback:
         model_callback(model)
