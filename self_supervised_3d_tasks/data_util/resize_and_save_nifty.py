@@ -379,10 +379,13 @@ def data_conversion_ukb():
                 t1_scan[t1_scan < 0] = 0
                 t1_scan[t1_scan > 4000] = 4000
                 try:
+                    print(t1_scan.shape)
                     t1_scan = crop_one_volume(t1_scan, input_volume_size)
+                    print(t1_scan.shape)
+                    print("============================")
                 except:
                     t1_scan = skTrans.resize(t1_scan, input_volume_size, order=1, preserve_range=True)
-                np.save(os.path.join(destination_path, "T1", str(subject_id) + ".npy"), t1_scan)
+                #np.save(os.path.join(destination_path, "T1", str(subject_id) + ".npy"), t1_scan)
 
                 t2_archive = zipfile.ZipFile(t2_flair_patient_ids[subject_id], 'r')
                 t2_extracted_path = t2_archive.extract('T2_FLAIR/T2_FLAIR.nii.gz')
@@ -395,7 +398,7 @@ def data_conversion_ukb():
                     t2_scan = crop_one_volume(t2_scan, input_volume_size)
                 except:
                     t2_scan = skTrans.resize(t2_scan, input_volume_size, order=1, preserve_range=True)
-                np.save(os.path.join(destination_path, "T2_FLAIR", str(subject_id) + ".npy"), t2_scan)
+                #np.save(os.path.join(destination_path, "T2_FLAIR", str(subject_id) + ".npy"), t2_scan)
                 del t1_scan, t2_scan
             except Exception:
                 print(t1_zip_file)
@@ -587,9 +590,9 @@ def stack_ukb_3D_modalities():
 
 
 if __name__ == "__main__":
-    # data_conversion_ukb()
-    # data_conversion_ukb_masks()
-    # stack_ukb_3D_modalities()
+    data_conversion_ukb()
+    #data_conversion_ukb_masks()
+    #stack_ukb_3D_modalities()
     #data_conversion_brats(split='train')
     # data_conversion_brats(split='test')
-    prepare_pancreas_data()
+    #prepare_pancreas_data()
