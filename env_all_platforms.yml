@@ -26,3 +26,4 @@ dependencies:
     - tensorflow_addons
     - joblib
     - opencv-python
+    - pydicom

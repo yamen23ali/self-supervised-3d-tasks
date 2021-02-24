@@ -185,7 +185,7 @@ def get_padded_image(image, crop_size):
 
     return padded_image
 
-def crop_image(image, label, crop_size):
+def crop_image(image, crop_size):
     image_crops = []
     label_crops = []
 
@@ -206,9 +206,8 @@ def crop_image(image, label, crop_size):
                 z_end = z_start + crop_size
 
                 image_crops.append( image[x_start:x_end, y_start:y_end, z_start:z_end] )
-                label_crops.append( label[x_start:x_end, y_start:y_end, z_start:z_end] )
 
-    return image_crops, label_crops
+    return image_crops
 
 def read_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path, patch_size=32):
     dim = (128, 128, 128)
@@ -265,7 +264,8 @@ def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_pa
             label = get_cutted_image(label, crop_size)
             label = get_padded_image(label, crop_size)
 
-            image_crops, label_crops = crop_image(img, label, crop_size)
+            image_crops = crop_image(img, crop_size)
+            label_crops = crop_image(label, crop_size)
 
             for j in range(len(image_crops)):
                 result = np.expand_dims(image_crops[j], axis=3)
