@@ -185,6 +185,39 @@ def get_padded_image(image, crop_size):
 
     return padded_image
 
+def get_crop_locations(index, crop_size, shape):
+    start = index*crop_size
+    end = start + crop_size
+    diff = end - shape
+
+    if diff > 0:
+        start = start - diff
+        end = end - diff
+
+    return start, end
+
+def smart_crop_image(image, crop_shape):
+    image_crops = []
+    label_crops = []
+    image_shape = image.shape
+
+    x_crops =  math.ceil(image.shape[0] / crop_shape[0])
+    y_crops = math.ceil(image.shape[1] / crop_shape[1])
+    z_crops = math.ceil(image.shape[2] / crop_shape[2])
+
+    for i in range(x_crops):
+        x_start, x_end = get_crop_locations(i, crop_shape[0], image_shape[0])
+
+        for j in range(y_crops):
+            y_start, y_end = get_crop_locations(j, crop_shape[1], image_shape[1])
+
+            for k in range(z_crops):
+                z_start, z_end = get_crop_locations(k, crop_shape[2], image_shape[2])
+
+                image_crops.append( image[x_start:x_end, y_start:y_end, z_start:z_end] )
+
+    return image_crops
+
 def crop_image(image, crop_size):
     image_crops = []
     label_crops = []

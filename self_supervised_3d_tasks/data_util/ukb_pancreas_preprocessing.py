@@ -9,9 +9,9 @@ import shutil
 from pydicom import dcmread
 import skimage.transform as skTrans
 from self_supervised_3d_tasks.data_util.nifti_utils import read_scan_find_bbox
-from self_supervised_3d_tasks.data_util.resize_and_save_nifty import get_cutted_image, get_padded_image, crop_image
+from self_supervised_3d_tasks.data_util.resize_and_save_nifty import get_cutted_image, get_padded_image, crop_image, smart_crop_image
 
-def build_volumes(extracted_folder_path, volume_name, destination_path, crop_size = 96, final_dim=(64, 64, 64)):
+def build_volumes(extracted_folder_path, volume_name, destination_path, crop_shape = (128, 128, 51), resize_dim=64):
     dcm_files = glob.glob(extracted_folder_path + "/*.dcm")
     slices_dict = {}
     slices = []
@@ -33,9 +33,10 @@ def build_volumes(extracted_folder_path, volume_name, destination_path, crop_siz
     volume, bb = read_scan_find_bbox(volume)
 
     # Crop volume into smaller volumes to avoid resizing
-    volume = get_cutted_image(volume, crop_size)
-    volume = get_padded_image(volume, crop_size)
-    volume_crops = crop_image(volume, crop_size)
+    volume_crops = smart_crop_image(volume, crop_shape)
+
+    # Don't resize on depth
+    final_dim = (resize_dim, resize_dim, crop_shape[2])
 
     for i in range(len(volume_crops)):
         volume_crop = skTrans.resize(volume_crops[i], final_dim, order=1, preserve_range=True)
