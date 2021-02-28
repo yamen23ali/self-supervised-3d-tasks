@@ -15,6 +15,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
     def __init__(
             self,
             data_dim=384,
+            data_dim_z=384,
             number_channels=3,
             crop_size=None,
             patches_in_depth=7,
@@ -39,10 +40,9 @@ class SimclrBuilder(AlgorithmBuilderBase):
         self.number_channels = number_channels
         self.patches_number = patches_in_depth * 2
 
-        depth_dim = int(data_dim / patches_in_depth)
+        depth_dim = int(data_dim_z / patches_in_depth)
         self.patch_shape_3d = (data_dim, data_dim, depth_dim, self.number_channels)
         self.input_shape = (self.patches_number, data_dim, data_dim, depth_dim, self.number_channels)
-        print(self.input_shape)
 
         self.inverse_eye = 1 - K.eye(self.patches_number)
         self.inverse_eye = K.expand_dims(self.inverse_eye, 0)

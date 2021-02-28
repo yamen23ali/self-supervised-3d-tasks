@@ -1,7 +1,7 @@
 {
   "algorithm": "simclr",
-  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm01/",
-  "data_dir": "/home/Yamen.Ali/netstore/processed_images_small/train",
+  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm03/",
+  "data_dir": "/mnt/projects/ukbiobank/derived/imaging/abdominal",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "keep_original",
@@ -14,10 +14,11 @@
   "temprature": 0.05,
 
   "code_size": 256,
-  "enc_filters": 4,
-  "patches_in_depth": 8,
-  "data_dim": 128,
-  "num_layers": 3,
+  "enc_filters": 16,
+  "patches_in_depth": 5,
+  "data_dim": 64,
+  "data_dim_z": 51,
+  "num_layers": 2,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
