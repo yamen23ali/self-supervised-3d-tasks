@@ -1,6 +1,6 @@
 {
   "algorithm": "simclr",
-  "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train",
+  "data_dir": "/Users/d070867/netstore/workspace/ukbio/processed",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "keep_original",
@@ -15,8 +15,8 @@
 
   "code_size": 5,
   "enc_filters": 2,
-  "patches_in_depth": 16,
-  "data_dim": 128,
+  "patches_in_depth": 5,
+  "data_dim": 64,
   "num_layers": 2,
 
   "top_architecture": "big_fully",

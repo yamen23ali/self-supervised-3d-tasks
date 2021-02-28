@@ -202,7 +202,7 @@ def get_augmentations(augmentations_names):
 
 def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names):
     _, w, h, d, _ = batch.shape
-    assert w == h and h == d, "accepting only cube volumes"
+    #assert w == h and h == d, "accepting only cube volumes"
 
     volumes = []
     augmented_volumes_patches = []
@@ -242,7 +242,7 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names)
 
 def preprocess_3d_volume_level_loss(batch, patches_in_depth, augmentations_names):
     _, w, h, d, _ = batch.shape
-    assert w == h and h == d, "accepting only cube volumes"
+    #assert w == h and h == d, "accepting only cube volumes"
 
     volumes = []
     augmented_volumes_patches = []
