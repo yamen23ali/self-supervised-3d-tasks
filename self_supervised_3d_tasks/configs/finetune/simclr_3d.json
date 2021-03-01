@@ -1,7 +1,7 @@
 {
   "algorithm": "simclr",
-  "data_dir_train": "/home/Yamen.Ali/netstore/processed_images/train",
-  "data_dir_test": "/home/Yamen.Ali/netstore/processed_images/test",
+  "data_dir_train": "/home/Yamen.Ali/netstore/processed_images_64/train",
+  "data_dir_test": "/home/Yamen.Ali/netstore/processed_images_64/test",
   "model_checkpoint": "/home/Yamen.Ali/netstore/workspace_vm03/simclr_pancreas3d_7/weights-improvement-982.hdf5",
   "dataset_name": "pancreas3d",
 

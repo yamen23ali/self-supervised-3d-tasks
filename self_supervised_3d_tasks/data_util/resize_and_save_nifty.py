@@ -277,7 +277,7 @@ def read_and_store_pancreas(files, data_path , lables_path, save_images_path, sa
             traceback.print_tb(e.__traceback__)
             continue
 
-def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path, crop_size=128):
+def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path, crop_shape = (128, 128, 64), resize_dim=64):
     for i, file_name in enumerate(files):
         path_to_image = "{}/{}".format(data_path, file_name)
         path_to_label = "{}/{}".format(lables_path, file_name)
@@ -292,17 +292,18 @@ def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_pa
             img, bb = read_scan_find_bbox(img)
             label = label[bb[0]:bb[1], bb[2]:bb[3], bb[4]:bb[5]]
 
-            img = get_cutted_image(img, crop_size)
-            img = get_padded_image(img, crop_size)
-            label = get_cutted_image(label, crop_size)
-            label = get_padded_image(label, crop_size)
+            image_crops = smart_crop_image(img, crop_shape)
+            label_crops = smart_crop_image(label, crop_shape)
 
-            image_crops = crop_image(img, crop_size)
-            label_crops = crop_image(label, crop_size)
+            # Don't resize on depth
+            final_dim = (resize_dim, resize_dim, crop_shape[2])
 
             for j in range(len(image_crops)):
-                result = np.expand_dims(image_crops[j], axis=3)
-                label_result = np.expand_dims(label_crops[j], axis=3)
+                resized_img = skTrans.resize(image_crops[j], final_dim, order=1, preserve_range=True)
+                result = np.expand_dims(resized_img, axis=3)
+
+                resized_label = skTrans.resize(label_crops[j], final_dim, order=1, preserve_range=True)
+                label_result = np.expand_dims(resized_label, axis=3)
 
                 image_file_name = file_name[:file_name.index('.')] + f"_{j}.npy"
                 label_file_name = file_name[:file_name.index('.')] + f"_{j}_label.npy"
@@ -320,10 +321,10 @@ def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_pa
 
 def prepare_pancreas_data():
 
-    training_images_path = "/home/Yamen.Ali/netstore/processed_images_small/train"
-    training_labels_path = "/home/Yamen.Ali/netstore/processed_images_small/train_labels"
-    test_images_path = "/home/Yamen.Ali/netstore/processed_images_small/test"
-    test_labels_path = "/home/Yamen.Ali/netstore/processed_images_small/test_labels"
+    training_images_path = "/home/Yamen.Ali/netstore/processed_images_64/train"
+    training_labels_path = "/home/Yamen.Ali/netstore/processed_images_64/train_labels"
+    test_images_path = "/home/Yamen.Ali/netstore/processed_images_64/test"
+    test_labels_path = "/home/Yamen.Ali/netstore/processed_images_64/test_labels"
 
     images_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/imagesTr"
     labels_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/labelsTr"
@@ -368,7 +369,7 @@ def crop_one_volume(volume, volume_size, volume_for_resize=None):
     for i in range(len(input_shape)):
         idx_min.append(indxes[i].min())
         idx_max.append(indxes[i].max())
-    # print('----',idx_max,idx_min)
+
     for i in range(len(input_shape)):
         difference = idx_max[i] - idx_min[i] - volume_size[i]
         idx_min[i] = int(idx_min[i] + abs(difference) / 2 - 1) if difference > 0 else \
@@ -412,13 +413,10 @@ def data_conversion_ukb():
                 t1_scan[t1_scan < 0] = 0
                 t1_scan[t1_scan > 4000] = 4000
                 try:
-                    print(t1_scan.shape)
                     t1_scan = crop_one_volume(t1_scan, input_volume_size)
-                    print(t1_scan.shape)
-                    print("============================")
                 except:
                     t1_scan = skTrans.resize(t1_scan, input_volume_size, order=1, preserve_range=True)
-                #np.save(os.path.join(destination_path, "T1", str(subject_id) + ".npy"), t1_scan)
+                np.save(os.path.join(destination_path, "T1", str(subject_id) + ".npy"), t1_scan)
 
                 t2_archive = zipfile.ZipFile(t2_flair_patient_ids[subject_id], 'r')
                 t2_extracted_path = t2_archive.extract('T2_FLAIR/T2_FLAIR.nii.gz')
@@ -431,7 +429,7 @@ def data_conversion_ukb():
                     t2_scan = crop_one_volume(t2_scan, input_volume_size)
                 except:
                     t2_scan = skTrans.resize(t2_scan, input_volume_size, order=1, preserve_range=True)
-                #np.save(os.path.join(destination_path, "T2_FLAIR", str(subject_id) + ".npy"), t2_scan)
+                np.save(os.path.join(destination_path, "T2_FLAIR", str(subject_id) + ".npy"), t2_scan)
                 del t1_scan, t2_scan
             except Exception:
                 print(t1_zip_file)
