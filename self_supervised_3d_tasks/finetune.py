@@ -228,10 +228,10 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
 
     # To handle big test data without OOM exceptions
     scores_f = []
-    if len(x_test) > 50:
+    if len(x_test) > 0:
         scores_f = get_scores_big_data(
             model=model, x_test=x_test, y_test=y_test,
-            scores=scores, step_size=50)
+            scores=scores, step_size=1)
     else:
         y_pred = model.predict(x_test, batch_size=batch_size)
         scores_f = make_scores(y_test, y_pred, scores)

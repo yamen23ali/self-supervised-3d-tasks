@@ -340,10 +340,11 @@ def prepare_pancreas_data():
     '''
 
     list_files_temp = np.array(os.listdir(images_path))
-    selected_indices = np.random.choice(len(list_files_temp), size=90, replace=False)
-    list_files_temp = list_files_temp[selected_indices]
+    #selected_indices = np.random.choice(len(list_files_temp), size=90, replace=False)
+    #list_files_temp = list_files_temp[selected_indices]
 
 
+    test_size = int(0.1 * len(list_files_temp))
     test_files_indices = np.random.choice(len(list_files_temp), size=9, replace=False)
     test_files = list_files_temp[test_files_indices]
 
@@ -621,9 +622,9 @@ def stack_ukb_3D_modalities():
 
 
 if __name__ == "__main__":
-    data_conversion_ukb()
+    #data_conversion_ukb()
     #data_conversion_ukb_masks()
     #stack_ukb_3D_modalities()
     #data_conversion_brats(split='train')
     # data_conversion_brats(split='test')
-    #prepare_pancreas_data()
+    prepare_pancreas_data()

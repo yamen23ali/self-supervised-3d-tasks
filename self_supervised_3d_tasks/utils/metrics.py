@@ -131,7 +131,11 @@ def score_dice(y, y_pred):
 
     j = jaccard_score(y, y_pred, average=None)
 
-    return np.average(np.array([(2 * x) / (1 + x) for x in j]))
+    try:
+        return np.average(np.array([(2 * x) / (1 + x) for x in j]))
+    except Exception as e:
+        print(e)
+        return 0.0
 
 def score_dice_class(y, y_pred, class_to_predict):
     y = np.argmax(y, axis=-1).flatten()

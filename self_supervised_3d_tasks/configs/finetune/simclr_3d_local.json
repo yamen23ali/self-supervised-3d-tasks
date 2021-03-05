@@ -2,7 +2,7 @@
   "algorithm": "simclr",
   "data_dir_train": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train",
   "data_dir_test": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/test",
-  "model_checkpoint": "/Users/d070867/netstore/workspace/simclr_pancreas3d_50/weights-improvement-001.hdf5",
+  "model_checkpoint": "/Users/d070867/netstore/workspace/simclr_pancreas3d_6/weights-improvement-001.hdf5",
   "dataset_name": "pancreas3d",
   "use_cpu": true,
 
@@ -11,8 +11,9 @@
 
   "code_size": 5,
   "enc_filters": 2,
-  "patches_per_side": 4,
-  "data_dim": 128,
+  "patches_in_depth": 5,
+  "data_dim": 64,
+  "data_dim_z": 51,
   "num_layers": 2,
 
   "loss": "weighted_dice_loss",
@@ -28,7 +29,7 @@
   "number_channels": 1,
   "batch_size": 2,
 
-  "exp_splits": [25],
+  "exp_splits": [100],
   "lr": 1e-3,
   "epochs_initialized": 2,
   "epochs_frozen": 0,
