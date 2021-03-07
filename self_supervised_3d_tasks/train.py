@@ -55,9 +55,9 @@ def train_model(algorithm, data_dir, dataset_name, root_config_file, epochs=250,
     kwargs["root_config_file"] = root_config_file
 
     #Set same seed to have all training done aginst same initial weights
-    np.random.seed(237)
-    tf.random.set_seed(39)
-    random.seed(46)
+    #np.random.seed(237)
+    #tf.random.set_seed(39)
+    #random.seed(46)
 
     working_dir = get_writing_path(Path(base_workspace).expanduser() / (algorithm + "_" + dataset_name),
                                    root_config_file)

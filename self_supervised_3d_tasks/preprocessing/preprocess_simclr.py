@@ -76,7 +76,31 @@ def rotate_patch_3d(patch, **kwargs):
 
 def crop_and_resize(patch, alpha=4, **kwargs):
     #print(f'Crop & Resize patch')
+    max_crop_length_x = int(patch.shape[0] / alpha)
+    max_start_x = (patch.shape[0] - max_crop_length_x) - 2 # To make sure no IndexOutOfBound occurs
 
+    max_crop_length_y = int(patch.shape[1] / alpha)
+    max_start_y = (patch.shape[1] - max_crop_length_y) - 2 # To make sure no IndexOutOfBound occurs
+
+    max_crop_length_z = int(patch.shape[2] / alpha)
+    max_start_z = (patch.shape[2] - max_crop_length_z) - 2 # To make sure no IndexOutOfBound occurs
+
+    # Select the starting point of the cropping randomly
+    start_x = np.random.randint(0, max_start_x)
+    start_y = np.random.randint(0, max_start_y)
+    start_z = np.random.randint(0, max_start_z)
+
+    # Crop a cubic image, if another form of cropping is required then we need to pass different
+    # values instead of the same max_crop_length for all
+    cropped_patch = do_crop_3d(patch, start_x, start_y, start_z, max_crop_length_x, max_crop_length_y, max_crop_length_z)
+
+
+    resized_patch = resize(cropped_patch, patch.shape[0])
+
+    return random_flip(resized_patch)
+
+def crop_and_resize_without_depth(patch, alpha=2, **kwargs):
+    #print("Crop and Resize")
     # All sides have the same size so anyone would do
     max_crop_length = int(patch.shape[0] / alpha)
     max_start = (patch.shape[0] - max_crop_length) - 2 # To make sure no IndexOutOfBound occurs
@@ -84,17 +108,14 @@ def crop_and_resize(patch, alpha=4, **kwargs):
     # Select the starting point of the cropping randomly
     start_x = np.random.randint(0, max_start)
     start_y = np.random.randint(0, max_start)
-    start_z = np.random.randint(0, max_start)
 
     # Cropp a cubic image, if another form of cropping is required then we need to pass different
     # values instead of the same max_crop_length for all
-    cropped_patch = do_crop_3d(patch, start_x, start_y, start_z, max_crop_length, max_crop_length, max_crop_length)
+    cropped_patch = do_crop_3d(patch, start_x, start_y, 0, max_crop_length, max_crop_length, patch.shape[2])
 
-
-    resized_patch = resize(cropped_patch, patch.shape[0])
-
-    # Not sure if this would make sense :/ because interpolation would change the data alot
-    #resized_patch = resize_with_interpolation(cropped_patch, patch.shape)
+    resized_patch = resize_with_interpolation(cropped_patch, patch.shape)
+    np.save("original", patch)
+    np.save("cropped", resized_patch)
 
     return random_flip(resized_patch)
 
@@ -156,18 +177,21 @@ def cut_out(patch, alpha=4, **kwargs):
     #print('Apply cutout patch')
 
     # All sides have the same size so anyone would do
-    max_cutout_length = int(patch.shape[0] / alpha)
-    max_start = (patch.shape[0] - max_cutout_length) - 2 # To make sure no IndexOutOfBound occurs
+    max_cutout_length_x = int(patch.shape[0] / alpha)
+    max_start_x = (patch.shape[0] - max_cutout_length_x) - 2 # To make sure no IndexOutOfBound occurs
+
+    max_cutout_length_y = int(patch.shape[1] / alpha)
+    max_start_y = (patch.shape[1] - max_cutout_length_y) - 2 # To make sure no IndexOutOfBound occurs
 
     max_cutout_length_z = int(patch.shape[2] / alpha)
     max_start_z = (patch.shape[2] - max_cutout_length_z) - 2 # To make sure no IndexOutOfBound occurs
 
     # Select the starting point of the cropping randomly
-    start_x = np.random.randint(0, max_start)
-    end_x = start_x +  max_cutout_length
+    start_x = np.random.randint(0, max_start_x)
+    end_x = start_x +  max_cutout_length_x
 
-    start_y = np.random.randint(0, max_start)
-    end_y = start_y + max_cutout_length
+    start_y = np.random.randint(0, max_start_y)
+    end_y = start_y + max_cutout_length_y
 
     start_z = np.random.randint(0, max_start_z)
     end_z = start_z +  max_cutout_length_z
