@@ -115,11 +115,13 @@ class DataGeneratorBase(keras.utils.Sequence):
             random.shuffle(self.list_IDs)
 
     def __data_generation_intern(self, list_files_temp):
-        data_x, data_y = self.data_generation(list_files_temp)
+        data_x, data_y, *extra_values = self.data_generation(list_files_temp)
 
         if self.pre_proc_func:
             if isinstance(self.pre_proc_func, NegativeSamplingPreprocessing):
                 data_x, data_y = self.pre_proc_func.preprocess_function(list_files_temp, data_x, data_y)
+            elif self.pre_proc_func.__name__ == "simclr_f_3d":
+                data_x, data_y = self.pre_proc_func(data_x, data_y, extra_values[0])
             else:
                 data_x, data_y = self.pre_proc_func(data_x, data_y)
 

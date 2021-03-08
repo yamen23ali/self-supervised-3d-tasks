@@ -124,6 +124,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
     def contrastive_loss_batch_level(self, ytrue, ypredicted):
         #predictions_shape = K.print_tensor(K.shape(ypredicted))
         patches_number = K.shape(ypredicted)[0]
+        K.print_tensor(ytrue)
 
         predictions_norm = self.l2_norm(ypredicted, axis=1)
 
@@ -173,13 +174,13 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return model
 
     def get_training_preprocessing(self):
-        def f_3d(x, y):
+        def simclr_f_3d(x, y, files_names):
             if self.loss_function == self.contrastive_loss_volume_level:
                 return preprocess_3d_volume_level_loss(x, self.patches_in_depth, self.augmentations)
 
-            return preprocess_3d_batch_level_loss(x, self.patches_in_depth, self.augmentations)
+            return preprocess_3d_batch_level_loss(x, self.patches_in_depth, self.augmentations, files_names)
 
-        return f_3d, f_3d
+        return simclr_f_3d, simclr_f_3d
 
     def get_finetuning_model(self, model_checkpoint=None):
         return super(SimclrBuilder, self).get_finetuning_model_patches(model_checkpoint)
