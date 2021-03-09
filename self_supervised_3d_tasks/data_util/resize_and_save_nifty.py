@@ -242,7 +242,7 @@ def crop_image(image, crop_size):
 
     return image_crops
 
-def read_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path, patch_size=32):
+def read_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path):
     dim = (128, 128, 128)
     for i, file_name in enumerate(files):
         path_to_image = "{}/{}".format(data_path, file_name)
@@ -344,16 +344,22 @@ def prepare_pancreas_data():
     #list_files_temp = list_files_temp[selected_indices]
 
 
-    test_size = int(0.1 * len(list_files_temp))
-    test_files_indices = np.random.choice(len(list_files_temp), size=9, replace=False)
+    test_size = int(0.2 * len(list_files_temp))
+    test_files_indices = np.random.choice(len(list_files_temp), size=test_size, replace=False)
     test_files = list_files_temp[test_files_indices]
 
     train_files = np.delete(list_files_temp, test_files_indices)
 
-    #train_files = ["pancreas_001.nii.gz"]
-
     preprocess_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
     preprocess_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
+
+    training_images_path = "/home/Yamen.Ali/netstore/processed_images/train"
+    training_labels_path = "/home/Yamen.Ali/netstore/processed_images/train_labels"
+    test_images_path = "/home/Yamen.Ali/netstore/processed_images/test"
+    test_labels_path = "/home/Yamen.Ali/netstore/processed_images/test_labels"
+
+    read_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
+    read_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
 
 def crop_one_volume(volume, volume_size, volume_for_resize=None):
     """
