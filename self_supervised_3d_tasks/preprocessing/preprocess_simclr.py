@@ -235,6 +235,7 @@ def build_similarities_mask(patches_positions):
                 mask[j][i] = 0
 
 
+    print(mask)
     return np.reshape(mask, arr_len*arr_len)
 
 def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names, files_names):
@@ -280,8 +281,7 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
                 )
             )
 
-            patches_positions.append(
-                int(f'{volume_position}{patch_index}'))
+            patches_positions.append(f'{volume_position}{patch_index}')
 
         augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
         augmented_volumes_patches.append(augmented_volume_patches)

@@ -62,7 +62,6 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def apply_prediction_model_to_encoder(self, encoder_model):
         x_input = Input(self.input_shape)
-        #similarity_mask = Input((5, 5))
 
         model_with_embed_dim = Sequential([encoder_model, Flatten(), Dense(self.code_size)])
 
@@ -126,7 +125,12 @@ class SimclrBuilder(AlgorithmBuilderBase):
     def contrastive_loss_batch_level(self, ytrue, ypredicted):
         #predictions_shape = K.print_tensor(K.shape(ypredicted))
         mask_shape = tf.cast(tf.math.sqrt(tf.cast(K.shape(ytrue)[1], tf.float32)), tf.int32)
+
+        # A mask that mark all pairs in similar positions with 0
+        # The idea here is to not enforce the model to
+        # consider pairs in similar positions either (similar nor dissimilar)
         similarities_mask = Reshape((mask_shape, mask_shape))(ytrue)[0]
+        #K.print_tensor(similarities_mask)
 
         patches_number = K.shape(ypredicted)[0]
 

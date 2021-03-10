@@ -16,14 +16,14 @@
 
   "code_size": 5,
   "enc_filters": 2,
-  "patches_in_depth": 5,
+  "patches_in_depth": 2,
   "data_dim": 64,
   "data_dim_z": 51,
   "num_layers": 2,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
-  "batch_size": 2,
+  "batch_size": 3,
   "embed_dim": 10,
 
   "lr": 1e-4,
