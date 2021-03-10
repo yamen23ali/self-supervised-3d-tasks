@@ -224,8 +224,7 @@ def keep_original(patch, **kwargs):
 def get_augmentations(augmentations_names):
     return np.array([getattr(thismodule, name) for name in augmentations_names])
 
-def build_sim_mask(patches_positions):
-    print(patches_positions.shape)
+def build_similarities_mask(patches_positions):
     arr_len = len(patches_positions)
     mask = np.ones((arr_len, arr_len))
 
@@ -235,7 +234,8 @@ def build_sim_mask(patches_positions):
                 mask[i][j] = 0
                 mask[j][i] = 0
 
-    return mask
+
+    return np.reshape(mask, arr_len*arr_len)
 
 def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names, files_names):
     _, w, h, d, _ = batch.shape
@@ -243,7 +243,7 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
 
     volumes = []
     augmented_volumes_patches = []
-    patches_positions = []
+    volumes_patches_positions = []
 
     # Convert the augmentations names we get from config file to functions
     augmentations = get_augmentations(augmentations_names)
@@ -251,6 +251,7 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
     for volume in batch:
         volumes.append(crop_in_depth(volume, patches_in_depth))
 
+    patches_positions = []
     for volume_index, volume_patches in enumerate(volumes):
         augmented_patches_1 = []
         augmented_patches_2 = []
@@ -280,16 +281,16 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
             )
 
             patches_positions.append(
-                f'{volume_position}_{patch_index}')
+                int(f'{volume_position}{patch_index}'))
 
         augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
         augmented_volumes_patches.append(augmented_volume_patches)
 
     patches_positions = np.concatenate(
             (patches_positions, patches_positions), axis=0)
-    mask = build_sim_mask(np.array(patches_positions))
+    mask = build_similarities_mask(patches_positions)
 
-    return np.array(augmented_volumes_patches), mask
+    return np.array(augmented_volumes_patches), mask[np.newaxis, :]
 
 def preprocess_3d_volume_level_loss(batch, patches_in_depth, augmentations_names):
     _, w, h, d, _ = batch.shape

@@ -1,11 +1,12 @@
 import numpy as np
+import math
 import tensorflow.keras as keras
 import tensorflow.keras.backend as K
 import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense, Lambda
-from tensorflow.keras.layers import Flatten, TimeDistributed
+from tensorflow.keras.layers import Dense, Lambda, Reshape
+from tensorflow.keras.layers import Flatten, TimeDistributed, multiply
 
 from self_supervised_3d_tasks.algorithms.algorithm_base import AlgorithmBuilderBase
 from self_supervised_3d_tasks.preprocessing.preprocess_simclr import preprocess_3d_batch_level_loss, preprocess_3d_volume_level_loss
@@ -61,6 +62,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def apply_prediction_model_to_encoder(self, encoder_model):
         x_input = Input(self.input_shape)
+        #similarity_mask = Input((5, 5))
 
         model_with_embed_dim = Sequential([encoder_model, Flatten(), Dense(self.code_size)])
 
@@ -123,8 +125,10 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def contrastive_loss_batch_level(self, ytrue, ypredicted):
         #predictions_shape = K.print_tensor(K.shape(ypredicted))
+        mask_shape = tf.cast(tf.math.sqrt(tf.cast(K.shape(ytrue)[1], tf.float32)), tf.int32)
+        similarities_mask = Reshape((mask_shape, mask_shape))(ytrue)[0]
+
         patches_number = K.shape(ypredicted)[0]
-        K.print_tensor(ytrue)
 
         predictions_norm = self.l2_norm(ypredicted, axis=1)
 
@@ -138,11 +142,12 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
         # Set self similarity to zero so that we can calculate losses through matrix operations
         similarities = K.exp(cosine_similarity / self.temprature)
-        similarities_mask = 1 - tf.one_hot(tf.range(patches_number), patches_number)
-        similarities = similarities * similarities_mask
+        identity_mask = 1 - tf.one_hot(tf.range(patches_number), patches_number)
+        similarities = similarities * identity_mask
 
         # Calculate denominator
-        denominator = K.sum(similarities, axis=1)
+        denominator_similarities = similarities * similarities_mask
+        denominator = K.sum(denominator_similarities, axis=1)
 
         # Calculate numerator
         mid_index = tf.cast(tf.math.divide(patches_number, 2), tf.int32)
