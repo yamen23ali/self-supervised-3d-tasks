@@ -24,6 +24,7 @@
   "number_channels": 1,
   "batch_size": 32,
   "embed_dim": 64,
+  "load_weights": true,
 
   "lr": 3e-3,
   "epochs": 2000
