@@ -34,6 +34,7 @@
   "epochs_random": 0,
   "epochs_warmup": 25,
   "repetitions": 3,
+  "load_weights": true,
 
   "clipnorm": 1,
   "clipvalue": 1
