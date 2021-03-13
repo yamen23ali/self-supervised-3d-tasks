@@ -234,8 +234,6 @@ def build_similarities_mask(patches_positions):
                 mask[i][j] = 0
                 mask[j][i] = 0
 
-
-    print(mask)
     return np.reshape(mask, arr_len*arr_len)
 
 def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names, files_names):
