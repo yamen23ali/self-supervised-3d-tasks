@@ -5,7 +5,7 @@ import os
 import random
 from os.path import expanduser
 from pathlib import Path
-
+from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import backend as K
@@ -144,6 +144,14 @@ def get_scores_big_data(model, x_test, y_test, scores, step_size=40):
 
     return scores_f
 
+def plot_and_save(history):
+    plt.plot(history.history['weighted_dice_coefficient'], label='Weighted Dice (training data)')
+    plt.plot(history.history['val_weighted_dice_coefficient'], label='Weighted Dice (validation data)')
+    plt.title('Finetuning Dice')
+    plt.ylabel('Weighted Dice')
+    plt.xlabel('No. epoch')
+    plt.legend(loc="upper left")
+    plt.savefig('finetune.png')
 
 def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weights, x_test, y_test, lr,
                     batch_size, epochs, epochs_warmup, model_checkpoint, scores, loss, metrics, logging_path, kwargs,
@@ -155,8 +163,10 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
     loss = make_custom_loss(loss)
 
     if load_weights:
+        print("Loading weights")
         enc_model = algorithm_def.get_finetuning_model(model_checkpoint)
     else:
+        print("Using only model architecture")
         enc_model = algorithm_def.get_finetuning_model()
 
     pred_model = apply_prediction_model(input_shape=enc_model.outputs[0].shape[1:], algorithm_instance=algorithm_def,
@@ -225,9 +235,11 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
 
         # recompile model
         model.compile(optimizer=get_optimizer(clipnorm, clipvalue, lr), loss=loss, metrics=metrics)
-        model.fit(
+        history = model.fit(
             x=gen_train, validation_data=gen_val, epochs=epochs, callbacks=callbacks
         )
+
+    plot_and_save(history)
 
     model.compile(optimizer=get_optimizer(clipnorm, clipvalue, lr), loss=loss, metrics=metrics)
 
@@ -387,7 +399,7 @@ def run_complex_test(
             if epochs_initialized > 0:
                 logging_b_path = logging_base_path / f"split{train_split}initialized_rep{i}.log"
                 b = try_until_no_nan(
-                    lambda: run_single_test(algorithm_def, gen_train, gen_val, True, False, x_test, y_test, lr,
+                    lambda: run_single_test(algorithm_def, gen_train, gen_val, kwargs["load_weights"], False, x_test, y_test, lr,
                                             batch_size, epochs_initialized, epochs_warmup, model_checkpoint, scores,
                                             loss, metrics,
                                             logging_b_path, kwargs, clipnorm=clipnorm, clipvalue=clipvalue))
