@@ -1,6 +1,6 @@
 {
   "algorithm": "simclr",
-  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm03/",
+  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm01/",
   "data_dir": "/mnt/projects/ukbiobank/derived/imaging/abdominal",
   "dataset_name": "pancreas3d",
   "augmentations":[
@@ -18,7 +18,7 @@
   "enc_filters": 16,
   "patches_in_depth": 5,
   "data_dim": 64,
-  "data_dim_z": 51,
+  "data_dim_z": 64,
   "num_layers": 2,
 
   "top_architecture": "big_fully",
