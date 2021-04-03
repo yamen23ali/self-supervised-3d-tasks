@@ -26,6 +26,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
             temprature=0.05,
             augmentations=[],
             loss_function_name='contrastive_loss_volume_level',
+            position_based_mask = False,
             **kwargs,
     ):
         super(SimclrBuilder, self).__init__(data_dim, number_channels, lr, data_is_3D, **kwargs)
@@ -39,6 +40,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         self.patches_in_depth = patches_in_depth
         self.code_size = code_size
         self.number_channels = number_channels
+        self.position_based_mask = position_based_mask
         self.patches_number = patches_in_depth * 2
 
         depth_dim = int(data_dim_z / patches_in_depth)
@@ -124,12 +126,6 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def contrastive_loss_batch_level(self, ytrue, ypredicted):
         #predictions_shape = K.print_tensor(K.shape(ypredicted))
-        mask_shape = tf.cast(tf.math.sqrt(tf.cast(K.shape(ytrue)[1], tf.float32)), tf.int32)
-
-        # A mask that mark all pairs in similar positions with 0
-        # The idea here is to not enforce the model to
-        # consider pairs in similar positions either (similar nor dissimilar)
-        similarities_mask = Reshape((mask_shape, mask_shape))(ytrue)[0]
         #K.print_tensor(similarities_mask)
 
         patches_number = K.shape(ypredicted)[0]
@@ -150,8 +146,17 @@ class SimclrBuilder(AlgorithmBuilderBase):
         similarities = similarities * identity_mask
 
         # Calculate denominator
-        denominator_similarities = similarities * similarities_mask
-        denominator = K.sum(denominator_similarities, axis=1)
+        denominator = None
+        if self.position_based_mask:
+            # A mask that mark all pairs in similar positions with 0
+            # The idea here is to not enforce the model to
+            # consider pairs in similar positions either (similar nor dissimilar)
+            mask_shape = tf.cast(tf.math.sqrt(tf.cast(K.shape(ytrue)[1], tf.float32)), tf.int32)
+            similarities_mask = Reshape((mask_shape, mask_shape))(ytrue)[0]
+            denominator_similarities = similarities * similarities_mask
+            denominator = K.sum(denominator_similarities, axis=1)
+        else:
+            denominator = K.sum(similarities, axis=1)
 
         # Calculate numerator
         mid_index = tf.cast(tf.math.divide(patches_number, 2), tf.int32)
@@ -187,7 +192,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
             if self.loss_function == self.contrastive_loss_volume_level:
                 return preprocess_3d_volume_level_loss(x, self.patches_in_depth, self.augmentations)
 
-            return preprocess_3d_batch_level_loss(x, self.patches_in_depth, self.augmentations, files_names)
+            return preprocess_3d_batch_level_loss(x, self.patches_in_depth, self.augmentations, files_names, self.position_based_mask)
 
         return simclr_f_3d, simclr_f_3d
 

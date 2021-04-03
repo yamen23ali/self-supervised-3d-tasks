@@ -236,13 +236,13 @@ def build_similarities_mask(patches_positions):
 
     return np.reshape(mask, arr_len*arr_len)
 
-def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names, files_names):
+def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names, files_names, position_based_mask):
     _, w, h, d, _ = batch.shape
     #assert w == h and h == d, "accepting only cube volumes"
 
     volumes = []
     augmented_volumes_patches = []
-    volumes_patches_positions = []
+    patches_positions = []
 
     # Convert the augmentations names we get from config file to functions
     augmentations = get_augmentations(augmentations_names)
@@ -250,7 +250,6 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
     for volume in batch:
         volumes.append(crop_in_depth(volume, patches_in_depth))
 
-    patches_positions = []
     for volume_index, volume_patches in enumerate(volumes):
         augmented_patches_1 = []
         augmented_patches_2 = []
@@ -284,11 +283,14 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
         augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
         augmented_volumes_patches.append(augmented_volume_patches)
 
-    patches_positions = np.concatenate(
+    if position_based_mask:
+        patches_positions = np.concatenate(
             (patches_positions, patches_positions), axis=0)
-    mask = build_similarities_mask(patches_positions)
+        mask = build_similarities_mask(patches_positions)
 
-    return np.array(augmented_volumes_patches), mask[np.newaxis, :]
+        return np.array(augmented_volumes_patches), mask[np.newaxis, :]
+    else:
+        return np.array(augmented_volumes_patches), np.zeros(len(batch))
 
 def preprocess_3d_volume_level_loss(batch, patches_in_depth, augmentations_names):
     _, w, h, d, _ = batch.shape

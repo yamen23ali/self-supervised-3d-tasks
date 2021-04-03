@@ -9,6 +9,7 @@
     "apply_sobel_filter", "cut_out", "crop_and_resize_without_depth"
   ],
   "loss_function_name": "contrastive_loss_batch_level",
+  "position_based_mask": false,
 
   "data_is_3D": true,
   "temprature": 0.05,
