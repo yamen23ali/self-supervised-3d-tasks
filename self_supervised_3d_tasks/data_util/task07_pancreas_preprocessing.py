@@ -153,7 +153,7 @@ def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_pa
             continue
 
 def prepare_pancreas_data():
-    '''
+
     training_images_path = "/home/Yamen.Ali/netstore/pancrease_cropped_64/train"
     training_labels_path = "/home/Yamen.Ali/netstore/pancrease_cropped_64/train_labels"
     test_images_path = "/home/Yamen.Ali/netstore/pancrease_cropped_64/test"
@@ -169,6 +169,7 @@ def prepare_pancreas_data():
 
     images_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/imagesTr"
     labels_path = "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/labelsTr"
+    '''
 
 
     list_files_temp = np.array(os.listdir(images_path))
@@ -182,13 +183,13 @@ def prepare_pancreas_data():
     preprocess_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
     preprocess_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
 
-    #training_images_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/train"
-    #training_labels_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/train_labels"
-    #test_images_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/test"
-    #test_labels_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/test_labels"
+    training_images_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/train"
+    training_labels_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/train_labels"
+    test_images_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/test"
+    test_labels_path = "/home/Yamen.Ali/netstore/pancrease_resized_128/test_labels"
 
-    #read_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
-    #read_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
+    read_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
+    read_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
 
 if __name__ == "__main__":
     prepare_pancreas_data()
