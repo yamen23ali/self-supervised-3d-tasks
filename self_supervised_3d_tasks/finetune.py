@@ -17,7 +17,7 @@ import self_supervised_3d_tasks.utils.metrics as metrics
 from self_supervised_3d_tasks.utils.callbacks import TerminateOnNaN, NaNLossError, LogCSVWithStart
 from self_supervised_3d_tasks.utils.metrics import weighted_sum_loss, jaccard_distance, \
     weighted_categorical_crossentropy, weighted_dice_coefficient, weighted_dice_coefficient_loss, \
-    weighted_dice_coefficient_per_class, brats_wt_metric, brats_et_metric, brats_tc_metric, enhanced_weighted_dice_coefficient
+    weighted_dice_coefficient_per_class, brats_wt_metric, brats_et_metric, brats_tc_metric, enhanced_weighted_dice_coefficient_loss
 from self_supervised_3d_tasks.test_data_backend import CvDataKaggle, StandardDataLoader
 from self_supervised_3d_tasks.train import (
     keras_algorithm_list,
@@ -57,7 +57,6 @@ def get_score(score_name):
         return metrics.brats_et
     else:
         raise ValueError(f"score {score_name} not found")
-
 
 def make_custom_metrics(metrics):
     metrics = list(metrics)
@@ -99,7 +98,7 @@ def make_custom_loss(loss):
     elif loss == "weighted_categorical_crossentropy":
         loss = weighted_categorical_crossentropy()
     elif loss == "enhanced_weighted_dice_loss":
-        loss = enhanced_weighted_dice_coefficient
+        loss = enhanced_weighted_dice_coefficient_loss
 
     return loss
 

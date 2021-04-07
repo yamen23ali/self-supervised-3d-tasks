@@ -71,9 +71,11 @@ def enhanced_weighted_dice_coefficient(y_true, y_pred, smooth=0.00001):
                                                                 axis=axis) + K.sum(y_pred*mask,
                                                                                    axis=axis) + smooth))
 
+def enhanced_weighted_dice_coefficient_loss(y_true, y_pred):
+    return -enhanced_weighted_dice_coefficient(y_true, y_pred)
+
 def weighted_dice_coefficient_loss(y_true, y_pred):
     return -weighted_dice_coefficient(y_true, y_pred)
-
 
 def weighted_sum_loss(alpha=0.5, beta=0.5, weights=(1, 5, 10)):
     # Note: this is specific for 3 classes
