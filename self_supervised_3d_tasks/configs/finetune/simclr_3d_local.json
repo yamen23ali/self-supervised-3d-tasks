@@ -18,7 +18,7 @@
   "num_layers": 2,
   "data_cropped": false,
 
-  "loss": "weighted_dice_loss",
+  "loss": "enhanced_weighted_dice_loss",
   "scores": ["dice", "jaccard", "dice_pancreas_0", "dice_pancreas_1", "dice_pancreas_2"],
   "metrics": ["accuracy", "weighted_dice_coefficient", "weighted_dice_coefficient_per_class_pancreas"],
   "train_data_generator_args": { "classes_num": 3},

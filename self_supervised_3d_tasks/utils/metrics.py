@@ -54,7 +54,6 @@ def weighted_dice_coefficient_per_class(y_true, y_pred, class_to_predict=0, smoo
                                                                 axis=axis) + K.sum(y_pred,
                                                                                    axis=axis) + smooth))[class_to_predict]
 
-
 def weighted_dice_coefficient(y_true, y_pred, smooth=0.00001):
     axis = tuple(range(y_pred.shape.rank - 1))
 
@@ -63,6 +62,14 @@ def weighted_dice_coefficient(y_true, y_pred, smooth=0.00001):
                                                                 axis=axis) + K.sum(y_pred,
                                                                                    axis=axis) + smooth))
 
+def enhanced_weighted_dice_coefficient(y_true, y_pred, smooth=0.00001):
+    axis = tuple(range(y_pred.shape.rank - 1))
+    mask = 1 - y_true
+
+    return K.mean(2. * (K.sum(y_true * y_pred,
+                              axis=axis) + smooth / 2) / (K.sum(y_true,
+                                                                axis=axis) + K.sum(y_pred*mask,
+                                                                                   axis=axis) + smooth))
 
 def weighted_dice_coefficient_loss(y_true, y_pred):
     return -weighted_dice_coefficient(y_true, y_pred)
