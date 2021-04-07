@@ -17,6 +17,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
             self,
             data_dim=384,
             data_dim_z=384,
+            patches_per_side=3,
             number_channels=3,
             crop_size=None,
             patches_in_depth=7,
@@ -27,6 +28,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
             augmentations=[],
             loss_function_name='contrastive_loss_volume_level',
             position_based_mask = False,
+            data_cropped = False,
             **kwargs,
     ):
         super(SimclrBuilder, self).__init__(data_dim, number_channels, lr, data_is_3D, **kwargs)
@@ -37,15 +39,23 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
         self.temprature = temprature
         self.augmentations = augmentations
-        self.patches_in_depth = patches_in_depth
         self.code_size = code_size
         self.number_channels = number_channels
         self.position_based_mask = position_based_mask
-        self.patches_number = patches_in_depth * 2
+        self.patches_in_depth = patches_in_depth
+        self.patches_per_side = patches_per_side
+        self.data_cropped = data_cropped
 
-        depth_dim = int(data_dim_z / patches_in_depth)
-        self.patch_shape_3d = (data_dim, data_dim, depth_dim, self.number_channels)
-        self.input_shape = (self.patches_number, data_dim, data_dim, depth_dim, self.number_channels)
+        if data_cropped:
+            self.patches_number = patches_in_depth * 2
+            depth_dim = int(data_dim_z / patches_in_depth)
+            self.patch_shape_3d = (data_dim, data_dim, depth_dim, self.number_channels)
+            self.input_shape = (self.patches_number, data_dim, data_dim, depth_dim, self.number_channels)
+        else:
+            self.patches_number = patches_per_side * patches_per_side * patches_per_side * 2
+            self.patch_dim = int(self.data_dim / patches_per_side)
+            self.patch_shape_3d = (self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels)
+            self.input_shape = (self.patches_number, self.patch_dim, self.patch_dim, self.patch_dim, self.number_channels)
 
         self.inverse_eye = 1 - K.eye(self.patches_number)
         self.inverse_eye = K.expand_dims(self.inverse_eye, 0)
@@ -190,9 +200,21 @@ class SimclrBuilder(AlgorithmBuilderBase):
     def get_training_preprocessing(self):
         def simclr_f_3d(x, y, files_names):
             if self.loss_function == self.contrastive_loss_volume_level:
-                return preprocess_3d_volume_level_loss(x, self.patches_in_depth, self.augmentations)
+                return preprocess_3d_volume_level_loss(
+                    x,
+                    self.augmentations,
+                    data_cropped=self.data_cropped,
+                    patches_in_depth=self.patches_in_depth,
+                    patches_per_side=self.patches_per_side)
 
-            return preprocess_3d_batch_level_loss(x, self.patches_in_depth, self.augmentations, files_names, self.position_based_mask)
+            return preprocess_3d_batch_level_loss(
+                x,
+                self.augmentations,
+                files_names,
+                self.position_based_mask,
+                data_cropped=self.data_cropped,
+                patches_in_depth=self.patches_in_depth,
+                patches_per_side=self.patches_per_side)
 
         return simclr_f_3d, simclr_f_3d
 

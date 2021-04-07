@@ -27,6 +27,29 @@ def crop_in_depth(image, patches_in_depth):
 
     return patches
 
+def crop_patches_3d(image, patches_per_side):
+    h, w, d, _ = image.shape
+
+    h_grid = h // patches_per_side
+    w_grid = w // patches_per_side
+    d_grid = d // patches_per_side
+
+    patches = []
+    for i in range(patches_per_side):
+        for j in range(patches_per_side):
+            for k in range(patches_per_side):
+
+                p = do_crop_3d(image,
+                            i * h_grid,
+                            j * w_grid,
+                            k * d_grid,
+                            h_grid,
+                            w_grid,
+                            d_grid)
+                patches.append(p)
+
+    return patches
+
 def resize(patch, new_size):
     # image.shape[3] is the number of channels
     new_patch = np.zeros((new_size, new_size, new_size, patch.shape[3]))
@@ -114,8 +137,8 @@ def crop_and_resize_without_depth(patch, alpha=2, **kwargs):
     cropped_patch = do_crop_3d(patch, start_x, start_y, 0, max_crop_length, max_crop_length, patch.shape[2])
 
     resized_patch = resize_with_interpolation(cropped_patch, patch.shape)
-    np.save("original", patch)
-    np.save("cropped", resized_patch)
+    #np.save("original", patch)
+    #np.save("cropped", resized_patch)
 
     return random_flip(resized_patch)
 
@@ -236,7 +259,15 @@ def build_similarities_mask(patches_positions):
 
     return np.reshape(mask, arr_len*arr_len)
 
-def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names, files_names, position_based_mask):
+def preprocess_3d_batch_level_loss(
+    batch,
+    augmentations_names,
+    files_names,
+    position_based_mask,
+    data_cropped=False,
+    patches_in_depth=None,
+    patches_per_side=None):
+
     _, w, h, d, _ = batch.shape
     #assert w == h and h == d, "accepting only cube volumes"
 
@@ -248,7 +279,10 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
     augmentations = get_augmentations(augmentations_names)
 
     for volume in batch:
-        volumes.append(crop_in_depth(volume, patches_in_depth))
+        if data_cropped:
+            volumes.append(crop_in_depth(volume, patches_in_depth))
+        else:
+            volumes.append(crop_patches_3d(volume, patches_per_side))
 
     for volume_index, volume_patches in enumerate(volumes):
         augmented_patches_1 = []
@@ -292,7 +326,13 @@ def preprocess_3d_batch_level_loss(batch, patches_in_depth, augmentations_names,
     else:
         return np.array(augmented_volumes_patches), np.zeros(len(batch))
 
-def preprocess_3d_volume_level_loss(batch, patches_in_depth, augmentations_names):
+def preprocess_3d_volume_level_loss(
+    batch,
+    augmentations_names,
+    data_cropped=False,
+    patches_in_depth=None,
+    patches_per_side=None):
+
     _, w, h, d, _ = batch.shape
     #assert w == h and h == d, "accepting only cube volumes"
 
@@ -303,7 +343,10 @@ def preprocess_3d_volume_level_loss(batch, patches_in_depth, augmentations_names
     augmentations = get_augmentations(augmentations_names)
 
     for volume in batch:
-        volumes.append(crop_in_depth(volume, patches_in_depth))
+        if data_cropped:
+            volumes.append(crop_in_depth(volume, patches_in_depth))
+        else:
+            volumes.append(crop_patches_3d(volume, patches_per_side))
 
     for volume_index, volume_patches in enumerate(volumes):
         augmented_volume_patches = []

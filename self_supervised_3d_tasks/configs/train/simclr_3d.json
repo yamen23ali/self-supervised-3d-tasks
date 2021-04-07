@@ -17,9 +17,11 @@
   "code_size": 256,
   "enc_filters": 16,
   "patches_in_depth": 5,
+  "patches_per_side": 4,
   "data_dim": 64,
   "data_dim_z": 64,
   "num_layers": 2,
+  "data_cropped": false,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
