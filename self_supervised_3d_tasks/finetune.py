@@ -182,6 +182,7 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
     outputs = pred_model(enc_model.outputs)
     model = Model(inputs=enc_model.inputs[0], outputs=outputs)
     print_flat_summary(model)
+    print(working_dir)
 
     if epochs > 0:
         callbacks = [TerminateOnNaN()]
@@ -246,9 +247,11 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
             x=gen_train, validation_data=gen_val, epochs=epochs, callbacks=callbacks
         )
 
+
     plot_and_save(history, plots_path)
 
     model.compile(optimizer=get_optimizer(clipnorm, clipvalue, lr), loss=loss, metrics=metrics)
+    model.save_weights(f'{plots_path}/finetuned_model.hdf5')
 
     # To handle big test data without OOM exceptions
     scores_f = []
