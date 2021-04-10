@@ -20,7 +20,7 @@
   "num_layers": 2,
   "data_cropped": false,
 
-  "loss": "enhanced_weighted_dice_loss",
+  "loss": "generalised_dice_loss_3D",
   "scores": ["dice", "jaccard", "dice_pancreas_0", "dice_pancreas_1", "dice_pancreas_2"],
   "metrics": ["accuracy", "weighted_dice_coefficient", "weighted_dice_coefficient_per_class_pancreas"],
   "train_data_generator_args": { "classes_num": 3},
@@ -31,7 +31,7 @@
   "prediction_architecture": "unet_3d_upconv",
   "pooling": "max",
   "number_channels": 1,
-  "batch_size": 20,
+  "batch_size": 2,
 
   "exp_splits": [10],
   "lr": 1e-3,
