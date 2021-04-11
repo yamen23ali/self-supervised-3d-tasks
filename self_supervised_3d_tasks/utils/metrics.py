@@ -74,6 +74,28 @@ def enhanced_weighted_dice_coefficient(y_true, y_pred, smooth=0.00001):
 def enhanced_weighted_dice_coefficient_loss(y_true, y_pred):
     return -enhanced_weighted_dice_coefficient(y_true, y_pred)
 
+def yamen_dice_loss_3D(y_true, y_pred):
+    shapes = K.shape(y_pred)
+    vol = K.cast(shapes[1] * shapes[2] * shapes[3], 'float32')
+    # flatten everything except channels (i.e. class probabilities)
+    y_true = K.reshape(y_true, (shapes[0], shapes[1] * shapes[2] * shapes[3], shapes[4]))
+    y_pred = K.reshape(y_pred, (shapes[0], shapes[1] * shapes[2] * shapes[3], shapes[4]))
+
+    # equal weights for each class:
+    pixels_of_class = K.sum(y_true, 1)
+    background_pixels = pixels_of_class[:, 0][:,np.newaxis]
+    #K.print_tensor(K.shape(pixels_of_class))
+
+    weights = background_pixels / pixels_of_class
+
+    overlaps = K.sum(y_pred * y_true, axis=1)
+    total = K.sum(y_pred + y_true, axis=1)
+
+    numerator = 2. * (weights * overlaps)
+    denominator = total * weights
+
+    return - K.mean( numerator / denominator)
+
 def generalised_dice_loss_3D(y_true, y_pred):
     """
     Function to calculate the Generalised Dice Loss defined in
@@ -90,7 +112,7 @@ def generalised_dice_loss_3D(y_true, y_pred):
     # weights = 1. - ((K.sum(y_true, 2)+1.) / vol)
 
     # weights like in paper:
-    weights = 1. / K.square((K.sum(y_true, 1) + 1.))
+    weights = 1. / (K.sum(y_true, 1) + 1.)
 
     overlaps = K.sum(y_pred * y_true, axis=1)
     total = K.sum(y_pred + y_true, axis=1)
@@ -98,7 +120,7 @@ def generalised_dice_loss_3D(y_true, y_pred):
     numerator = -2. * (weights * overlaps)
     denominator = total * weights
 
-    return 1. + K.sum(numerator, -1) / K.sum(denominator, -1)
+    return K.mean(1. + K.sum(numerator, -1) / K.sum(denominator, -1))
 
 def weighted_dice_coefficient_loss(y_true, y_pred):
     return -weighted_dice_coefficient(y_true, y_pred)
