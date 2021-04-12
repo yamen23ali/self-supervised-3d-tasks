@@ -87,6 +87,8 @@ def yamen_dice_loss_3D(y_true, y_pred):
     #K.print_tensor(K.shape(pixels_of_class))
 
     weights = background_pixels / pixels_of_class
+    coff = np.array([1, 5, 10])
+    weights = weights * coff
 
     overlaps = K.sum(y_pred * y_true, axis=1)
     total = K.sum(y_pred + y_true, axis=1)
