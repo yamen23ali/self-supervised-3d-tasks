@@ -69,7 +69,7 @@ def random_flip(patch):
 
     return patch
 
-def rotate_patch_3d(patch, **kwargs):
+def rotate_patch_2d(patch, **kwargs):
     #print('Rotating patch')
 
     rotated_patch = []
@@ -97,7 +97,35 @@ def rotate_patch_3d(patch, **kwargs):
 
     return rotated_patch
 
-def crop_and_resize(patch, alpha=4, **kwargs):
+def rotate_patch_3d(patch, **kwargs):
+    #print('Rotating patch')
+
+    rotated_patch = []
+    # Randomly choose the rotation access
+    rot = np.random.randint(1, 10)
+
+    if rot == 1:
+        rotated_patch = np.transpose(np.flip(patch, 1), (1, 0, 2, 3))  # 90 deg Z
+    elif rot == 2:
+        rotated_patch = np.flip(np.transpose(patch, (1, 0, 2, 3)), 1)  # -90 deg Z
+    elif rot == 3:
+        rotated_patch = np.flip(patch, (0, 1))  # 180 degrees on z axis
+    elif rot == 4:
+        rotated_patch = np.transpose(np.flip(patch, 1), (0, 2, 1, 3))  # 90 deg X
+    elif rot == 5:
+        rotated_patch = np.flip(np.transpose(patch, (0, 2, 1, 3)), 1)  # -90 deg X
+    elif rot == 6:
+        rotated_patch = np.flip(patch, (1, 2))  # 180 degrees on x axis
+    elif rot == 7:
+        rotated_patch = np.transpose(np.flip(patch, 0), (2, 1, 0, 3))  # 90 deg Y
+    elif rot == 8:
+        rotated_patch = np.transpose(np.flip(patch, 0), (2, 1, 0, 3))  # -90 deg Y
+    elif rot == 9:
+        rotated_patch = np.flip(patch, (0, 2))  # 180 degrees on y axis
+
+    return rotated_patch
+
+def crop_and_resize_3d(patch, alpha=4, **kwargs):
     #print(f'Crop & Resize patch')
     max_crop_length_x = int(patch.shape[0] / alpha)
     max_start_x = (patch.shape[0] - max_crop_length_x) - 2 # To make sure no IndexOutOfBound occurs
@@ -122,7 +150,7 @@ def crop_and_resize(patch, alpha=4, **kwargs):
 
     return random_flip(resized_patch)
 
-def crop_and_resize_without_depth(patch, alpha=2, **kwargs):
+def crop_and_resize_2d(patch, alpha=2, **kwargs):
     #print("Crop and Resize")
     # All sides have the same size so anyone would do
     max_crop_length = int(patch.shape[0] / alpha)
