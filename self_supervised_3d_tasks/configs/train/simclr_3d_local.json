@@ -1,6 +1,6 @@
 {
   "algorithm": "simclr",
-  "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result/train",
+  "data_dir": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result_resized/train",
   "dataset_name": "pancreas3d",
   "augmentations":[
     "rotate_patch_3d", "keep_original",
@@ -9,7 +9,7 @@
     "global_pair", "crop_and_resize_without_depth"
   ],
   "loss_function_name": "contrastive_loss_batch_level",
-  "position_based_mask": true,
+  "position_based_mask": false,
   "use_cpu": true,
 
   "data_is_3D": true,
@@ -22,7 +22,7 @@
   "data_dim": 64,
   "data_dim_z": 64,
   "num_layers": 2,
-  "data_cropped": false,
+  "data_cropped": true,
 
 
   "top_architecture": "big_fully",
