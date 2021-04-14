@@ -7,10 +7,10 @@ from tensorflow.keras import Input
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense, Lambda, Reshape
 from tensorflow.keras.layers import Flatten, TimeDistributed, multiply, UpSampling3D
-
+from tensorflow.keras.losses import mse
 from self_supervised_3d_tasks.algorithms.algorithm_base import AlgorithmBuilderBase
 from self_supervised_3d_tasks.preprocessing.preprocess_simclr import preprocess_3d_batch_level_loss, preprocess_3d_volume_level_loss
-from self_supervised_3d_tasks.utils.model_utils import apply_encoder_model_3d
+from self_supervised_3d_tasks.utils.model_utils import apply_encoder_model_3d, print_flat_summary
 from self_supervised_3d_tasks.models.unet3d import downconv_model_3d, upconv_model_3d
 
 class SimclrBuilder(AlgorithmBuilderBase):
@@ -79,21 +79,45 @@ class SimclrBuilder(AlgorithmBuilderBase):
         model_with_embed_dim = Sequential([encoder_model, Flatten(), Dense(self.code_size)])
         x_encoded = TimeDistributed(model_with_embed_dim)(x_input)
         x_encoded = Lambda(self.reshape_predictions)(x_encoded)
+        #K.print_tensor(K.shape(x_encoded))
 
-        decoder = self.apply_decoder(encoder_model, enc_layer_data)
-        decoder_inputs =[
-                    encoder_model.layers[-1].output,
-                    *reversed(enc_layer_data[0])]
-        print(decoder_inputs)
-        x_decoded = decoder(decoder_inputs)
+        decoder = self.apply_decoder_simple(encoder_model, enc_layer_data)
 
-        simclr_model = keras.models.Model(inputs=x_input, outputs=[x_encoded, x_decoded])
+        model_with_embed_dim2 = Sequential([encoder_model, decoder])
+        #x_decoded = TimeDistributed(model_with_embed_dim2)(x_input)
+        x_decoded = model_with_embed_dim2(x_input)
+
+        simclr_loss = self.contrastive_loss_batch_level(x_encoded, x_encoded)
+        try:
+            enc_dec_loss = mse(x_input, x_decoded)
+            print(x_decoded)
+            print(x_input)
+            print(enc_dec_loss)
+        except Exception as e:
+            print("Expcetion")
+        loss =  K.mean(0.5*enc_dec_loss)
+
+        simclr_model = keras.models.Model(
+            inputs=x_input,
+            outputs=x_decoded)
+        simclr_model.add_loss(loss)
+        #simclr_model = keras.models.Model(inputs=x_input, outputs=x_encoded)
+        #print_flat_summary(simclr_model)
+        #return 0
 
         return simclr_model
 
+    def apply_decoder_simple(self, encoder_model, layer_data):
+        first_input = Input(encoder_model.outputs[0].shape[1:])
+        x = UpSampling3D((2, 2, 2))(first_input)
+
+        model_up_out = upconv_model_3d(x.shape[1:], down_layers=layer_data[0],
+                                       filters=layer_data[1], num_classes=1)(x)
+
+        return keras.models.Model(inputs=first_input, outputs=model_up_out)
+
     def apply_decoder(self, encoder_model, layer_data):
         first_input = Input(encoder_model.outputs[0].shape[1:])
-        #print(first_input)
         x = UpSampling3D((2, 2, 2))(first_input)
 
         inputs_skip = [Input(x.shape[1:]) for x in reversed(layer_data[0])]
@@ -104,10 +128,10 @@ class SimclrBuilder(AlgorithmBuilderBase):
         model_up_out = upconv_model_3d(x.shape[1:], down_layers=layer_data[0],
                                        filters=layer_data[1], num_classes=1)(inputs_up)
 
-
         return keras.models.Model(inputs=[first_input, *inputs_skip], outputs=model_up_out)
 
     def reshape_predictions(self, predictions):
+        #K.print_tensor(K.shape(predictions))
         # Only reshape when we want to compute the contrastive loss on batch level
         if self.loss_function == self.contrastive_loss_volume_level:
             return predictions
@@ -129,7 +153,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def contrastive_loss_volume_level(self, ytrue, ypredicted):
         #predictions_shape = K.print_tensor(K.shape(ypredicted))
-        #ypredicted = ypredicted[0]
+        ypredicted = ypredicted[0]
         predictions_norm = self.l2_norm(ypredicted, axis=2)
 
         transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
@@ -158,6 +182,13 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return K.mean(batch_loss)
 
     def contrastive_loss_batch_level(self, ytrue, ypredicted):
+        #print("================")
+        #print(ypredicted)
+        K.print_tensor(K.shape(ypredicted))
+        #print(ypredicted[0].shape)
+        #print(ypredicted[1].shape)
+        #print(ytrue[0].shape)
+        #print(ytrue[1].shape)
         #ypredicted = ypredicted[0]
         #predictions_shape = K.print_tensor(K.shape(ypredicted))
         #K.print_tensor(similarities_mask)
@@ -216,7 +247,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         model = self.apply_model()
         model.compile(
             optimizer=keras.optimizers.Adam(lr=self.lr),
-            loss=self.loss_function,
+            #loss=self.loss_function,
             metrics=[self.loss_function]
         )
         return model

@@ -324,7 +324,8 @@ def preprocess_3d_batch_level_loss(
 
         return np.array(augmented_volumes_patches), mask[np.newaxis, :]
     else:
-        return np.array(augmented_volumes_patches), np.zeros(len(batch))
+        #return np.array(augmented_volumes_patches), [np.zeros(len(batch)), np.array(augmented_volumes_patches)]
+        return np.array(augmented_volumes_patches), np.array(augmented_volumes_patches)
 
 def preprocess_3d_volume_level_loss(
     batch,

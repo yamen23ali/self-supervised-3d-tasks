@@ -27,7 +27,7 @@
 
   "top_architecture": "big_fully",
   "number_channels": 1,
-  "batch_size": 3,
+  "batch_size": 2,
   "embed_dim": 10,
 
   "lr": 1e-4,
