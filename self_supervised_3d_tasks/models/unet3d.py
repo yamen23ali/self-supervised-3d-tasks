@@ -129,7 +129,10 @@ def upconv_model_3d(
         x = conv3d_block(
             inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout
         )
-    outputs = Conv3D(num_classes, (1, 1, 1), activation=output_activation)(x)
+
+    outputs = x
+    if num_classes > 0:
+        outputs = Conv3D(num_classes, (1, 1, 1), activation=output_activation)(x)
     model = Model(inputs=inputs, outputs=[outputs])
     return model
 

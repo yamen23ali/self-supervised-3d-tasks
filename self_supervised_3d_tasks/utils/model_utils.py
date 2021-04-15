@@ -307,7 +307,7 @@ def apply_decoder_model_from_encoder(encoder_model, layer_data):
 
     model_up_out = upconv_model_3d(
         x.shape[1:], down_layers=layer_data[0],
-        filters=layer_data[1], num_classes=1, multiple_inputs=False)(x)
+        filters=layer_data[1], num_classes=0, multiple_inputs=False)(x)
 
     return Model(inputs=first_input, outputs=model_up_out)
 
