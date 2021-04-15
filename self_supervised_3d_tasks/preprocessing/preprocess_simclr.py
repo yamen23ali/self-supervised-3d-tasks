@@ -322,10 +322,9 @@ def preprocess_3d_batch_level_loss(
             (patches_positions, patches_positions), axis=0)
         mask = build_similarities_mask(patches_positions)
 
-        return np.array(augmented_volumes_patches), mask[np.newaxis, :]
+        return np.array(augmented_volumes_patches), [mask[np.newaxis, :], np.array(augmented_volumes_patches)]
     else:
-        #return np.array(augmented_volumes_patches), [np.zeros(len(batch)), np.array(augmented_volumes_patches)]
-        return np.array(augmented_volumes_patches), np.array(augmented_volumes_patches)
+        return np.array(augmented_volumes_patches), [np.zeros(len(batch)), np.array(augmented_volumes_patches)]
 
 def preprocess_3d_volume_level_loss(
     batch,
@@ -372,4 +371,4 @@ def preprocess_3d_volume_level_loss(
 
         augmented_volumes_patches.append(augmented_volume_patches)
 
-    return np.array(augmented_volumes_patches), np.zeros(len(batch))
+    return np.array(augmented_volumes_patches), [np.zeros(len(batch)), np.array(augmented_volumes_patches)]

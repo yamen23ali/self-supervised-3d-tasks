@@ -103,6 +103,7 @@ def upconv_model_3d(
         filters=128,
         down_layers=(),
         output_activation="softmax",  # 'sigmoid' or 'softmax'
+        multiple_inputs=True,
         **kwargs
 ):
     inp = Input(input_shape)
@@ -119,9 +120,12 @@ def upconv_model_3d(
         filters //= 2  # decreasing number of filters with each layer
         dropout -= dropout_change_per_layer
         x = upsample(filters, (2, 2, 2), strides=(2, 2, 2), padding="same")(x)
-        #c_in = Input((int(x) for x in conv.shape[1:]))
-        #inputs.append(c_in)
-        #x = concatenate([x, c_in])
+
+        if multiple_inputs:
+            c_in = Input((int(x) for x in conv.shape[1:]))
+            inputs.append(c_in)
+            x = concatenate([x, c_in])
+
         x = conv3d_block(
             inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout
         )
