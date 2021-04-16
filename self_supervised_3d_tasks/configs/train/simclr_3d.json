@@ -10,6 +10,8 @@
   ],
   "loss_function_name": "contrastive_loss_batch_level",
   "position_based_mask": false,
+  "reconstruction_loss_weight": 0.5,
+  "contrastive_loss_weight": 0.5,
 
   "data_is_3D": true,
   "temprature": 0.05,
