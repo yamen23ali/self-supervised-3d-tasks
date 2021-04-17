@@ -83,13 +83,13 @@ class SimclrBuilder(AlgorithmBuilderBase):
     def apply_prediction_model_to_encoder(self, encoder_model, decoder_model):
         x_input = Input(self.input_shape)
 
-        embeddings = Sequential([Flatten(), Dense(self.code_size)])
+        embeddings_model = Sequential([Flatten(), Dense(self.code_size)])
         x_encoded = TimeDistributed(encoder_model)(x_input)
 
         # Contrastive output
-        embedding = TimeDistributed(embeddings)(x_encoded)
+        embeddings = TimeDistributed(embeddings_model)(x_encoded)
         contrastive_output = Lambda(
-            self.reshape_predictions, name=self.embeddings_output)(x_encoded)
+            self.reshape_predictions, name=self.embeddings_output)(embeddings)
 
         # Enc Dec output
         enc_dec_output = TimeDistributed(decoder_model,  name=self.decoder_output)(x_encoded)
@@ -163,8 +163,11 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return K.mean(batch_loss)
 
     def contrastive_loss_batch_level(self, ytrue, ypredicted):
+        #print("======= Batch ======")
         #K.print_tensor(K.shape(ypredicted))
+        #K.print_tensor(K.shape(ytrue))
         patches_number = K.shape(ypredicted)[0]
+        #K.print_tensor(patches_number)
 
         predictions_norm = self.l2_norm(ypredicted, axis=1)
 
@@ -180,6 +183,7 @@ class SimclrBuilder(AlgorithmBuilderBase):
         similarities = K.exp(cosine_similarity / self.temprature)
         identity_mask = 1 - tf.one_hot(tf.range(patches_number), patches_number)
         similarities = similarities * identity_mask
+        #K.print_tensor(K.shape(similarities))
 
         # Calculate denominator
         denominator = None
