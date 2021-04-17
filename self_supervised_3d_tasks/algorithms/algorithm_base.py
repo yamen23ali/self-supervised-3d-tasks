@@ -1,6 +1,6 @@
 from tensorflow.python.keras import Model
 from tensorflow.python.keras.layers.pooling import Pooling3D, Pooling2D
-from self_supervised_3d_tasks.utils.model_utils import make_finetuning_encoder_3d, make_finetuning_encoder_2d
+from self_supervised_3d_tasks.utils.model_utils import make_finetuning_encoder_3d, make_finetuning_encoder_2d, make_finetuning_decoder_3d
 
 
 class AlgorithmBuilderBase:
@@ -21,6 +21,7 @@ class AlgorithmBuilderBase:
         self.cleanup_models = []
         self.layer_data = None
         self.enc_model = None
+        self.dec_model = None
 
     def apply_model(self):
         pass
@@ -66,7 +67,23 @@ class AlgorithmBuilderBase:
                     *reversed(self.layer_data[0]),
                 ])
 
-        return self.enc_model
+    def get_finetuning_model_with_dec(self, model_checkpoint=None):
+        model = self.apply_model()
+        assert self.enc_model is not None, "no encoder model"
+        assert self.dec_model is not None, "no decoder model"
+
+        if model_checkpoint is not None:
+            try:
+                model.load_weights(model_checkpoint)
+            except ValueError:
+                print("Error happend")
+                model.load_weights(model_checkpoint, by_name=True, skip_mismatch=True)
+
+        self.cleanup_models.append(model)
+        self.cleanup_models.append(self.enc_model)
+        self.cleanup_models.append(self.dec_model)
+
+        return self.enc_model, self.dec_model
 
     def get_finetuning_model_patches(self, model_checkpoint):
         model = self.apply_model()
@@ -97,6 +114,32 @@ class AlgorithmBuilderBase:
             )
 
             return new_enc
+
+    def get_finetuning_model_with_dec_patches(self, model_checkpoint=None):
+        model = self.apply_model()
+        assert self.enc_model is not None, "no encoder model"
+        assert self.dec_model is not None, "no decoder model"
+
+        if model_checkpoint is not None:
+            try:
+                model.load_weights(model_checkpoint)
+            except ValueError:
+                print("Error happend")
+                model.load_weights(model_checkpoint, by_name=True, skip_mismatch=True)
+
+        self.cleanup_models.append(model)
+        self.cleanup_models.append(self.enc_model)
+        self.cleanup_models.append(self.dec_model)
+
+        new_enc, layer_data = make_finetuning_encoder_3d(
+                (self.data_dim, self.data_dim, self.data_dim, self.number_channels,),
+                self.enc_model,
+                **self.kwargs
+            )
+
+        new_dec = make_finetuning_decoder_3d(new_enc, layer_data, self.dec_model)
+
+        return new_enc, new_dec
 
     def purge(self):
         for i in reversed(range(len(self.cleanup_models))):

@@ -8,7 +8,7 @@
     "apply_sobel_filter", "cut_out",
     "global_pair", "crop_and_resize_without_depth"
   ],
-  "loss_function_name": "contrastive_loss_batch_level",
+  "loss_function_name": "contrastive_loss_volume_level",
   "reconstruction_loss_weight": 0.5,
   "contrastive_loss_weight": 0.5,
   "position_based_mask": false,

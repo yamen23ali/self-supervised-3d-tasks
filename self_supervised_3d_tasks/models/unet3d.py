@@ -104,8 +104,8 @@ def upconv_model_3d(
         down_layers=(),
         output_activation="softmax",  # 'sigmoid' or 'softmax'
         multiple_inputs=True,
-        **kwargs
-):
+        initial_upsample=False,
+        **kwargs):
     inp = Input(input_shape)
     inputs = [inp]
     x = inp
@@ -113,9 +113,14 @@ def upconv_model_3d(
         upsample = upsample_conv_3d
     else:
         upsample = upsample_simple_3d
+
     if not use_dropout_on_upsampling:
         dropout = 0.0
         dropout_change_per_layer = 0.0
+
+    if initial_upsample:
+        x = upsample(filters, (2, 2, 2), strides=(2, 2, 2), padding="same")(x)
+
     for conv in reversed(down_layers):
         filters //= 2  # decreasing number of filters with each layer
         dropout -= dropout_change_per_layer
@@ -131,8 +136,8 @@ def upconv_model_3d(
         )
 
     outputs = x
-    if num_classes > 0:
-        outputs = Conv3D(num_classes, (1, 1, 1), activation=output_activation)(x)
+
+    outputs = Conv3D(num_classes, (1, 1, 1), activation=output_activation)(x)
     model = Model(inputs=inputs, outputs=[outputs])
     return model
 

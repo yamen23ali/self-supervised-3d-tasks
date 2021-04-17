@@ -174,18 +174,30 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
     metrics = make_custom_metrics(metrics)
     loss = make_custom_loss(loss)
 
+    model = None
+    enc_model = None
+    dec_model = enc_model
     if load_weights:
         print("Loading weights")
-        enc_model = algorithm_def.get_finetuning_model(model_checkpoint)
+        #enc_model = algorithm_def.get_finetuning_model(model_checkpoint)
+        enc_model, dec_model = algorithm_def.get_finetuning_model_with_dec(model_checkpoint)
+        pred_model = apply_prediction_model(
+            input_shape=dec_model.outputs[-1].shape[1:],
+            algorithm_instance=algorithm_def,
+            num_classes=3,
+            **kwargs)
+        enc_dec_outputs = dec_model(enc_model.outputs)
+        outputs = pred_model(enc_dec_outputs)
+        model = Model(
+            inputs=enc_model.inputs[0], outputs=outputs)
     else:
         print("Using only model architecture")
         enc_model = algorithm_def.get_finetuning_model()
-
-    pred_model = apply_prediction_model(input_shape=enc_model.outputs[0].shape[1:], algorithm_instance=algorithm_def,
+        pred_model = apply_prediction_model(input_shape=enc_model.outputs[0].shape[1:], algorithm_instance=algorithm_def,
                                         **kwargs)
+        outputs = pred_model(enc_model.outputs)
+        model = Model(inputs=enc_model.inputs[0], outputs=outputs)
 
-    outputs = pred_model(enc_model.outputs)
-    model = Model(inputs=enc_model.inputs[0], outputs=outputs)
     print_flat_summary(model)
     print(working_dir)
 
@@ -200,6 +212,7 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
             logger_after_warmup = LogCSVWithStart(str(logging_path), start_from_epoch=epochs_warmup, append=True)
         if freeze_weights or load_weights:
             enc_model.trainable = False
+            dec_model.trainable = False
 
         if freeze_weights:
             print(("-" * 10) + "LOADING weights, encoder model is completely frozen")
@@ -227,6 +240,7 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
             epochs = epochs - epochs_warmup
 
             enc_model.trainable = True
+            dec_model.trainable = True
             print(("-" * 5) + " encoder model unfrozen")
 
             if logging_csv:

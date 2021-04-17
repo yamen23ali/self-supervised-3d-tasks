@@ -21,7 +21,7 @@ from tensorflow.keras.applications import InceptionV3, InceptionResNetV2, ResNet
 from tensorflow.keras.applications import ResNet50, ResNet50V2, ResNet101, ResNet101V2
 from tensorflow.keras.layers import Dense, Flatten
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import Lambda, Concatenate, TimeDistributed, UpSampling3D
+from tensorflow.python.keras.layers import Lambda, Concatenate, TimeDistributed, UpSampling3D, Conv3D
 from self_supervised_3d_tasks.models.fully_connected import fully_connected_big, simple_multiclass
 from self_supervised_3d_tasks.models.unet import downconv_model, upconv_model
 from self_supervised_3d_tasks.models.unet3d import downconv_model_3d, upconv_model_3d
@@ -118,6 +118,10 @@ def get_prediction_model(name, in_shape, include_top, algorithm_instance, num_cl
                                        filters=algorithm_instance.layer_data[1], num_classes=num_classes)(inputs_up)
 
         return Model(inputs=[first_input, *inputs_skip], outputs=model_up_out)
+    elif name == "unet_3d_upconv_classes":
+        inputs = Input(in_shape)
+        outputs = Conv3D(num_classes, (1, 1, 1), activation="softmax")(inputs)
+        model = Model(inputs=inputs, outputs=[outputs])
     elif name == "unet_3d_upconv_patches":
         # This version of the unet3d model creates a separate unet for each patch. Currently unused
         assert algorithm_instance is not None, "no algorithm instance for 3d skip connections found"
@@ -271,6 +275,16 @@ def make_finetuning_encoder(input_shape, enc_model, f_encoder_model, t_pooling, 
     return new_enc_model, layer_data
 
 
+def make_finetuning_decoder_3d(enc_model, enc_layer_data, dec_model):
+    new_dec_model = apply_decoder_model_from_encoder(enc_model, enc_layer_data)
+
+    weights = [layer.get_weights() for layer in dec_model.layers[:-1]]
+    for layer, weight in zip(new_dec_model.layers[:-1], weights):
+        layer.set_weights(weight)
+
+    return new_dec_model
+
+
 def make_finetuning_encoder_2d(input_shape, enc_model, **kwargs):
     return make_finetuning_encoder(input_shape, enc_model, apply_encoder_model, Pooling2D, **kwargs)
 
@@ -302,14 +316,11 @@ def apply_encoder_model_3d(
     return model, layer_data
 
 def apply_decoder_model_from_encoder(encoder_model, layer_data):
-    first_input = Input(encoder_model.outputs[0].shape[1:])
-    x = UpSampling3D((2, 2, 2))(first_input)
-
-    model_up_out = upconv_model_3d(
-        x.shape[1:], down_layers=layer_data[0],
-        filters=layer_data[1], num_classes=0, multiple_inputs=False)(x)
-
-    return Model(inputs=first_input, outputs=model_up_out)
+    return upconv_model_3d(
+            encoder_model.outputs[0].shape[1:],
+            down_layers=layer_data[0],
+            filters=layer_data[1], num_classes=1,
+            multiple_inputs=False, initial_upsample=True)
 
 
 def apply_encoder_model(

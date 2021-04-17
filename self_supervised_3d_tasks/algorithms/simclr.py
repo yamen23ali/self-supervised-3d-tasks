@@ -36,9 +36,9 @@ class SimclrBuilder(AlgorithmBuilderBase):
     ):
         super(SimclrBuilder, self).__init__(data_dim, number_channels, lr, data_is_3D, **kwargs)
 
-        self.loss_function = self.contrastive_loss_volume_level
+        self.contrastive_loss_function = self.contrastive_loss_volume_level
         if loss_function_name =='contrastive_loss_batch_level':
-            self.loss_function = self.contrastive_loss_batch_level
+            self.contrastive_loss_function = self.contrastive_loss_batch_level
 
         self.temprature = temprature
         self.augmentations = augmentations
@@ -75,10 +75,10 @@ class SimclrBuilder(AlgorithmBuilderBase):
             self.numerator_mask[0, i-1, i] = 1
 
     def apply_model(self):
-        encoder_model, enc_layer_data = apply_encoder_model_3d(self.patch_shape_3d, **self.kwargs)
-        decoder_model = apply_decoder_model_from_encoder(encoder_model, enc_layer_data)
+        self.enc_model, enc_layer_data = apply_encoder_model_3d(self.patch_shape_3d, **self.kwargs)
+        self.dec_model = apply_decoder_model_from_encoder(self.enc_model, enc_layer_data)
 
-        return self.apply_prediction_model_to_encoder(encoder_model, decoder_model)
+        return self.apply_prediction_model_to_encoder(self.enc_model, self.dec_model)
 
     def apply_prediction_model_to_encoder(self, encoder_model, decoder_model):
         x_input = Input(self.input_shape)
@@ -99,22 +99,13 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
         return simclr_model
 
-    def enc_dec_loss(self, ytrue, ypredicted):
+    def reconstruction_loss(self, ytrue, ypredicted):
         return K.mean(mse(ytrue, ypredicted))
-
-    def apply_decoder_simple(self, encoder_model, layer_data):
-        first_input = Input(encoder_model.outputs[0].shape[1:])
-        x = UpSampling3D((2, 2, 2))(first_input)
-
-        model_up_out = upconv_model_3d(x.shape[1:], down_layers=layer_data[0],
-                                       filters=layer_data[1], num_classes=1)(x)
-
-        return keras.models.Model(inputs=first_input, outputs=model_up_out)
 
     def reshape_predictions(self, predictions):
         #K.print_tensor(K.shape(predictions))
         # Only reshape when we want to compute the contrastive loss on batch level
-        if self.loss_function == self.contrastive_loss_volume_level:
+        if self.contrastive_loss_function == self.contrastive_loss_volume_level:
             return predictions
 
         mid_index = int(predictions.shape[1]/2)
@@ -134,7 +125,6 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def contrastive_loss_volume_level(self, ytrue, ypredicted):
         #predictions_shape = K.print_tensor(K.shape(ypredicted))
-        ypredicted = ypredicted[0]
         predictions_norm = self.l2_norm(ypredicted, axis=2)
 
         transposed_predictions = K.permute_dimensions(ypredicted, (0,2,1))
@@ -223,37 +213,23 @@ class SimclrBuilder(AlgorithmBuilderBase):
         model.compile(
             optimizer=keras.optimizers.Adam(lr=self.lr),
             loss={
-                self.embeddings_output: self.loss_function,
-                self.decoder_output: self.enc_dec_loss
+                self.embeddings_output: self.contrastive_loss_function,
+                self.decoder_output: self.reconstruction_loss
             },
             loss_weights={
                 self.embeddings_output: self.contrastive_loss_weight,
                 self.decoder_output: self.reconstruction_loss_weight
             },
             metrics={
-                self.embeddings_output: self.loss_function,
-                self.decoder_output: self.enc_dec_loss
+                self.embeddings_output: self.contrastive_loss_function,
+                self.decoder_output: self.reconstruction_loss
             }
         )
         return model
 
-    def apply_decoder(self, encoder_model, layer_data):
-        first_input = Input(encoder_model.outputs[0].shape[1:])
-        x = UpSampling3D((2, 2, 2))(first_input)
-
-        inputs_skip = [Input(x.shape[1:]) for x in reversed(layer_data[0])]
-        inputs_up = [x] + inputs_skip
-        #print(inputs_skip)
-        #print(inputs_up)
-
-        model_up_out = upconv_model_3d(x.shape[1:], down_layers=layer_data[0],
-                                       filters=layer_data[1], num_classes=1)(inputs_up)
-
-        return keras.models.Model(inputs=[first_input, *inputs_skip], outputs=model_up_out)
-
     def get_training_preprocessing(self):
         def simclr_f_3d(x, y, files_names):
-            if self.loss_function == self.contrastive_loss_volume_level:
+            if self.contrastive_loss_function == self.contrastive_loss_volume_level:
                 return preprocess_3d_volume_level_loss(
                     x,
                     self.augmentations,
@@ -274,6 +250,9 @@ class SimclrBuilder(AlgorithmBuilderBase):
 
     def get_finetuning_model(self, model_checkpoint=None):
         return super(SimclrBuilder, self).get_finetuning_model_patches(model_checkpoint)
+
+    def get_finetuning_model_with_dec(self, model_checkpoint=None):
+        return super(SimclrBuilder, self).get_finetuning_model_with_dec_patches(model_checkpoint)
 
 
 def create_instance(*params, **kwargs):
