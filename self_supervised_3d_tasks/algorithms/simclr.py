@@ -100,7 +100,10 @@ class SimclrBuilder(AlgorithmBuilderBase):
         return simclr_model
 
     def reconstruction_loss(self, ytrue, ypredicted):
-        return K.mean(mse(ytrue, ypredicted))
+        #if self.contrastive_loss_function == self.contrastive_loss_volume_level:
+        return K.mean(mse(ytrue[:,::2], ypredicted[:,1::2])) + K.mean(mse(ytrue[:,1::2], ypredicted[:,::2]))
+        #return K.mean(mse(ytrue[::2], ypredicted[1::2])) + K.mean(mse(ytrue[1::2], ypredicted[::2]))
+
 
     def reshape_predictions(self, predictions):
         #K.print_tensor(K.shape(predictions))

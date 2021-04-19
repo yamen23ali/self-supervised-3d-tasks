@@ -5,8 +5,7 @@
   "augmentations":[
     "rotate_patch_3d", "keep_original",
     "distort_color","apply_gaussian_blur", "add_gaussian_noise",
-    "apply_sobel_filter", "cut_out",
-    "global_pair", "crop_and_resize_without_depth"
+    "apply_sobel_filter"
   ],
   "loss_function_name": "contrastive_loss_volume_level",
   "reconstruction_loss_weight": 0.5,
