@@ -178,22 +178,26 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
     enc_model = None
     dec_model = enc_model
     if load_weights:
-        print("Loading weights")
-        #enc_model = algorithm_def.get_finetuning_model(model_checkpoint)
-        enc_model, dec_model = algorithm_def.get_finetuning_model_with_dec(model_checkpoint)
-    else:
-        print("Using only model architecture")
-        #enc_model = algorithm_def.get_finetuning_model()
         enc_model, dec_model = algorithm_def.get_finetuning_model_with_dec()
-
-    pred_model = apply_prediction_model(
+        pred_model = apply_prediction_model(
             input_shape=dec_model.outputs[-1].shape[1:],
             algorithm_instance=algorithm_def,
             num_classes=3,
             **kwargs)
-    enc_dec_outputs = dec_model(enc_model.outputs)
-    outputs = pred_model(enc_dec_outputs)
-    model = Model(inputs=enc_model.inputs[0], outputs=outputs)
+        enc_dec_outputs = dec_model(enc_model.outputs)
+        outputs = pred_model(enc_dec_outputs)
+        model = Model(inputs=enc_model.inputs[0], outputs=outputs)
+        print_flat_summary(enc_model)
+        print_flat_summary(dec_model)
+        print_flat_summary(pred_model)
+    else:
+        print("Using only model architecture")
+        enc_model = algorithm_def.get_finetuning_model()
+        pred_model = apply_prediction_model(input_shape=enc_model.outputs[0].shape[1:], algorithm_instance=algorithm_def,
+                                        **kwargs)
+        outputs = pred_model(enc_model.outputs)
+        model = Model(inputs=enc_model.inputs[0], outputs=outputs)
+
     print_flat_summary(model)
     print(working_dir)
 
