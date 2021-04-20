@@ -179,16 +179,20 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
     dec_model = enc_model
     if load_weights:
         enc_model, dec_model = algorithm_def.get_finetuning_model_with_dec()
+
         pred_model = apply_prediction_model(
-            input_shape=dec_model.outputs[-1].shape[1:],
+            input_shape=dec_model.layers[-8].output.shape[1:],
             algorithm_instance=algorithm_def,
             num_classes=3,
             **kwargs)
-        enc_dec_outputs = dec_model(enc_model.outputs)
+
+        inter_model = Model(
+            inputs=dec_model.inputs,
+            outputs=dec_model.layers[-8].output)
+
+        enc_dec_outputs = inter_model(enc_model.outputs)
         outputs = pred_model(enc_dec_outputs)
         model = Model(inputs=enc_model.inputs[0], outputs=outputs)
-        print_flat_summary(enc_model)
-        print_flat_summary(dec_model)
         print_flat_summary(pred_model)
     else:
         print("Using only model architecture")

@@ -24,7 +24,7 @@ from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Lambda, Concatenate, TimeDistributed, UpSampling3D, Conv3D
 from self_supervised_3d_tasks.models.fully_connected import fully_connected_big, simple_multiclass
 from self_supervised_3d_tasks.models.unet import downconv_model, upconv_model
-from self_supervised_3d_tasks.models.unet3d import downconv_model_3d, upconv_model_3d
+from self_supervised_3d_tasks.models.unet3d import downconv_model_3d, upconv_model_3d, conv3d_block
 
 
 def print_flat_summary(model, long=True, printed_models=[]):
@@ -120,7 +120,11 @@ def get_prediction_model(name, in_shape, include_top, algorithm_instance, num_cl
         return Model(inputs=[first_input, *inputs_skip], outputs=model_up_out)
     elif name == "unet_3d_upconv_classes":
         inputs = Input(in_shape)
-        outputs = Conv3D(num_classes, (1, 1, 1), activation="softmax")(inputs)
+        upsampled = UpSampling3D((2, 2, 2))(inputs)
+        conved = conv3d_block(
+            inputs=upsampled, filters=2, use_batch_norm=True, dropout=0.3
+        )
+        outputs = Conv3D(num_classes, (1, 1, 1), activation="softmax")(conved)
         model = Model(inputs=inputs, outputs=[outputs])
     elif name == "unet_3d_upconv_patches":
         # This version of the unet3d model creates a separate unet for each patch. Currently unused
