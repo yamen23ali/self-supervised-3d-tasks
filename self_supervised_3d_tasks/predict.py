@@ -41,13 +41,14 @@ def predict(
         **kwargs)
     gen_train, gen_val, x_test, y_test = data_loader.get_dataset(0, 1)
 
-    enc_model = algorithm_def.get_finetuning_model(finetuned_model)
+    enc_model = algorithm_def.get_finetuning_model()
     pred_model = apply_prediction_model(
         input_shape=enc_model.outputs[0].shape[1:],
         algorithm_instance=algorithm_def,
         **kwargs)
     outputs = pred_model(enc_model.outputs)
     model = Model(inputs=enc_model.inputs[0], outputs=outputs)
+    model.load_weights(finetuned_model)
     model.compile(
         optimizer=Adam(lr=lr, clipnorm=clipnorm, clipvalue=clipvalue),
         loss='binary_crossentropy',
