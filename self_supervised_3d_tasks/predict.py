@@ -57,8 +57,8 @@ def predict(
     y_pred = model.predict(x_test, batch_size=batch_size)
     y_pred = np.argmax(y_pred, axis=-1)
 
-    for i in range(0.. y_pred.shape[0]):
-        np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[0])
+    for i in range(0,y_pred.shape[0]):
+        np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
 
 
 init(predict, "predict")
