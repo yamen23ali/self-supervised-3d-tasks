@@ -60,5 +60,37 @@ def predict(
     for i in range(0,y_pred.shape[0]):
         np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
 
+def get_hist(data_dir):
+    label_dir = data_dir + "_labels"
+    label_stem="_label"
+    files = os.listdir(data_dir)
 
-init(predict, "predict")
+    counts = { 0:0, 1:1, 2:2}
+
+    for file_name in files:
+        path_label = Path("{}/{}".format(label_dir, file_name))
+        path_label = path_label.with_name(path_label.stem + label_stem).with_suffix(path_label.suffix)
+        data_y = np.load(path_label)
+        y = np.rint(data_y).astype(np.int)
+        labels, y_counts = np.unique(y, return_counts=True)
+        counts[0]+= y_counts[0]
+        counts[1]+= y_counts[1]
+        counts[2]+= y_counts[2]
+
+    return counts
+
+def get_hist_all(data_dir_train, data_dir_test, **kwargs):
+    train_counts = get_hist(data_dir_train)
+    total = train_counts[0] + train_counts[1] + train_counts[2]
+    print(f'Train - Class 0 { (train_counts[0]*100)/ total}')
+    print(f'Train - Class 1 { (train_counts[1]*100)/ total}')
+    print(f'Train - Class 2 { (train_counts[2]*100)/ total}')
+
+    test_counts = get_hist(data_dir_test)
+    total = test_counts[0] + test_counts[1] + test_counts[2]
+    print(f'Test - Class 0 { (test_counts[0]*100)/ total}')
+    print(f'Test - Class 1 { (test_counts[1]*100)/ total}')
+    print(f'Test - Class 2 { (test_counts[2]*100)/ total}')
+
+#init(predict, "predict")
+init(get_hist_all, "hist")

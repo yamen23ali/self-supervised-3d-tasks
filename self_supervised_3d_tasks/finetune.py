@@ -478,7 +478,6 @@ def run_complex_test(
         results.append(data)
         write_result(working_dir, data)
 
-
 def main():
     init(run_complex_test, "test")
 
