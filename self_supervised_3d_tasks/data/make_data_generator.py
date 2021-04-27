@@ -1,6 +1,6 @@
 import os
 import random
-
+import json
 
 def get_data_generators_internal(data_path, files, data_generator, train_split=None, val_split=None,
                                  train_data_generator_args={},
@@ -121,11 +121,48 @@ def make_cross_validation(data_path, data_generator, k_fold=5, files=None,
                                   test_data_generator_args, val_data_generator_args, **kwargs)
 
 
+def ensure_class_dist(data_path, class_distribution_path, files, train_split):
+    with open(f'{class_distribution_path}/hist.json') as json_file:
+        data = json.load(json_file)
+
+    print(files)
+    print(train_split)
+
+    train_split = int(len(files) * train_split)
+    train_files = []
+
+    for i in range(20):
+        print(f'Trying to achieve dist, trial {i}=====')
+
+        random.shuffle(files)
+        train_files = files[:train_split]
+        class0 = 0
+        class1 = 0
+        class2 = 0
+        for file_name in train_files:
+            class0 += int(data[file_name]['class0'])
+            class1 += int(data[file_name]['class1'])
+            class2 += int(data[file_name]['class2'])
+
+        total = class0 + class1 + class2
+        class1_dist = int((class1 / total)*100)
+        class2_dist = int((class2 / total)*1000)
+
+        print(class1_dist)
+        print(class2_dist)
+
+        if (class2_dist >= 20 and class2_dist <= 30) and (class1_dist >= 20 and class1_dist <=30):
+            return files
+
+    return files
+
 def get_data_generators(data_path, data_generator, train_split=None, val_split=None,
                         train_data_generator_args={},
                         test_data_generator_args={},
                         val_data_generator_args={},
                         shuffle_before_split=False,
+                        ensure_class_distribution=False,
+                        class_distribution_path=None,
                         **kwargs):
     """
     This function generates the data generator for training, testing and optional validation.
@@ -145,6 +182,9 @@ def get_data_generators(data_path, data_generator, train_split=None, val_split=N
 
     if shuffle_before_split:
         random.shuffle(files)
+
+    if ensure_class_distribution and train_split:
+        ensure_class_dist(data_path, class_distribution_path, files, train_split)
 
     return get_data_generators_internal(data_path, files, data_generator, train_split=train_split, val_split=val_split,
                                         train_data_generator_args=train_data_generator_args,

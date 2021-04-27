@@ -8,6 +8,7 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
+import json
 from tensorflow.python.keras import Model
 from tensorflow.keras.optimizers import Adam
 
@@ -60,6 +61,28 @@ def predict(
     for i in range(0,y_pred.shape[0]):
         np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
 
+def get_hist_per_image(data_dir_train, **kwargs):
+    label_dir = data_dir_train + "_labels"
+    label_stem="_label"
+    files = os.listdir(data_dir_train)
+
+    data = {}
+
+    for file_name in files:
+        path_label = Path("{}/{}".format(label_dir, file_name))
+        path_label = path_label.with_name(path_label.stem + label_stem).with_suffix(path_label.suffix)
+        data_y = np.load(path_label)
+        y = np.rint(data_y).astype(np.int)
+        labels, y_counts = np.unique(y, return_counts=True)
+        data[file_name] = {
+            "class0": str(y_counts[0]),
+            "class1": str(y_counts[1]),
+            "class2": str(y_counts[2])
+        }
+
+    with open(f'{data_dir_train}/hist.json', 'w') as outfile:
+        json.dump(data, outfile)
+
 def get_hist(data_dir):
     label_dir = data_dir + "_labels"
     label_stem="_label"
@@ -93,4 +116,5 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
     print(f'Test - Class 2 { (test_counts[2]*100)/ total}')
 
 #init(predict, "predict")
-init(get_hist_all, "hist")
+#init(get_hist_all, "hist")
+init(get_hist_per_image, "hist")

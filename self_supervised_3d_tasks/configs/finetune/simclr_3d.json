@@ -3,7 +3,9 @@
   "data_dir_train": "/home/Yamen.Ali/netstore/processed_images_64/train",
   "data_dir_test": "/home/Yamen.Ali/netstore/processed_images_64/test",
   "model_checkpoint": "/home/Yamen.Ali/netstore/workspace_vm03/simclr_pancreas3d_7/weights-improvement-982.hdf5",
+  "class_distribution_path": "/home/Yamen.Ali/netstore/processed_images_128/",
   "dataset_name": "pancreas3d",
+  "ensure_class_distribution": true,
 
   "data_is_3D": true,
   "val_split": 0.05,
