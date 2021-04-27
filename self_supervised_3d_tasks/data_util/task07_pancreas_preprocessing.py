@@ -78,29 +78,25 @@ def smart_crop_image(image, crop_shape):
 def read_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path):
     dim = (128, 128, 128)
     for i, file_name in enumerate(files):
-        path_to_image = "{}/{}".format(data_path, file_name)
-        path_to_label = "{}/{}".format(lables_path, file_name)
-
         try:
+            path_to_image = "{}/{}".format(data_path, file_name)
             img = nib.load(path_to_image)
             img = img.get_fdata()
-
-            label = nib.load(path_to_label)
-            label = label.get_fdata()
-
             img, bb = read_scan_find_bbox(img)
-            label = label[bb[0]:bb[1], bb[2]:bb[3], bb[4]:bb[5]]
-
             img = skTrans.resize(img, dim, order=1, preserve_range=True)
-            label = skTrans.resize(label, dim, order=1, preserve_range=True)
-
             result = np.expand_dims(img, axis=3)
-            label_result = np.expand_dims(label, axis=3)
-
             file_name = file_name[:file_name.index('.')] + ".npy"
-            label_file_name = file_name[:file_name.index('.')] + "_label.npy"
             np.save("{}/{}".format(save_images_path, file_name), result)
-            np.save("{}/{}".format(save_labels_path, label_file_name), label_result)
+
+            if lables_path:
+                path_to_label = "{}/{}".format(lables_path, file_name)
+                label = nib.load(path_to_label)
+                label = label.get_fdata()
+                label = label[bb[0]:bb[1], bb[2]:bb[3], bb[4]:bb[5]]
+                label = skTrans.resize(label, dim, order=1, preserve_range=True)
+                label_result = np.expand_dims(label, axis=3)
+                label_file_name = file_name[:file_name.index('.')] + "_label.npy"
+                np.save("{}/{}".format(save_labels_path, label_file_name), label_result)
 
             perc = (float(i) * 100.0) / len(files)
             print(f"{perc:.2f} % done")
@@ -109,6 +105,7 @@ def read_and_store_pancreas(files, data_path , lables_path, save_images_path, sa
             print("Error while loading image {}.".format(path_to_image))
             traceback.print_tb(e.__traceback__)
             continue
+
 
 def preprocess_and_store_pancreas(files, data_path , lables_path, save_images_path, save_labels_path, crop_shape = (128, 128, 64), resize_dim=64):
     for i, file_name in enumerate(files):
@@ -191,5 +188,19 @@ def prepare_pancreas_data():
     read_and_store_pancreas(train_files, images_path, labels_path, training_images_path, training_labels_path)
     read_and_store_pancreas(test_files, images_path, labels_path, test_images_path, test_labels_path)
 
+def prepare_pancreas_data_pretask():
+
+    result_path = "/home/Yamen.Ali/netstore/pancrease_resized_128_pretask/"
+
+    tr_images_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/imagesTr"
+    ts_images_path = "/home/Yamen.Ali/netstore/Task07_Pancreas/imagesTs"
+
+    list_files_temp = np.array(os.listdir(tr_images_path))
+    read_and_store_pancreas(list_files_temp, tr_images_path, None, result_path, None)
+
+    list_files_temp = np.array(os.listdir(ts_images_path))
+    read_and_store_pancreas(list_files_temp, ts_images_path, None, result_path, None)
+
 if __name__ == "__main__":
-    prepare_pancreas_data()
+    #prepare_pancreas_data()
+    prepare_pancreas_data_pretask()
