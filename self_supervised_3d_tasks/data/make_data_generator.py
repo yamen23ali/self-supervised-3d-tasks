@@ -131,7 +131,7 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
     train_split = int(len(files) * train_split)
     train_files = []
 
-    for i in range(20):
+    for i in range(200):
         print(f'Trying to achieve dist, trial {i}=====')
 
         random.shuffle(files)
@@ -145,8 +145,8 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
             class2 += int(data[file_name]['class2'])
 
         total = class0 + class1 + class2
-        class1_dist = int((class1 / total)*100)
-        class2_dist = int((class2 / total)*1000)
+        class1_dist = int((class1*100 / total)*100)
+        class2_dist = int((class2*100 / total)*1000)
 
         print(class1_dist)
         print(class2_dist)
