@@ -340,7 +340,8 @@ def preprocess_3d_batch_level_loss(
                 )
             )
 
-            patches_positions.append(f'{volume_position}{patch_index}')
+            #patches_positions.append(f'{volume_position}{patch_index}')
+            patches_positions.append(f'{patch_index}')
 
         augmented_volume_patches = np.concatenate((augmented_patches_1, augmented_patches_2), axis=0)
         augmented_volumes_patches.append(augmented_volume_patches)
