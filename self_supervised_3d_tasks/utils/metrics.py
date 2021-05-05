@@ -74,29 +74,32 @@ def enhanced_weighted_dice_coefficient(y_true, y_pred, smooth=0.00001):
 def enhanced_weighted_dice_coefficient_loss(y_true, y_pred):
     return -enhanced_weighted_dice_coefficient(y_true, y_pred)
 
-def yamen_dice_loss_3D(y_true, y_pred):
-    shapes = K.shape(y_pred)
-    vol = K.cast(shapes[1] * shapes[2] * shapes[3], 'float32')
-    # flatten everything except channels (i.e. class probabilities)
-    y_true = K.reshape(y_true, (shapes[0], shapes[1] * shapes[2] * shapes[3], shapes[4]))
-    y_pred = K.reshape(y_pred, (shapes[0], shapes[1] * shapes[2] * shapes[3], shapes[4]))
+def custom_dice_loss(weights_coff):
+    def loss(y_true, y_pred):
+        shapes = K.shape(y_pred)
+        vol = K.cast(shapes[1] * shapes[2] * shapes[3], 'float32')
+        # flatten everything except channels (i.e. class probabilities)
+        y_true = K.reshape(y_true, (shapes[0], shapes[1] * shapes[2] * shapes[3], shapes[4]))
+        y_pred = K.reshape(y_pred, (shapes[0], shapes[1] * shapes[2] * shapes[3], shapes[4]))
 
-    # equal weights for each class:
-    pixels_of_class = K.sum(y_true, 1)
-    background_pixels = pixels_of_class[:, 0][:,np.newaxis]
-    #K.print_tensor(K.shape(pixels_of_class))
+        # equal weights for each class:
+        pixels_of_class = K.sum(y_true, 1)
+        background_pixels = pixels_of_class[:, 0][:,np.newaxis]
+        #K.print_tensor(K.shape(pixels_of_class))
 
-    weights = background_pixels / pixels_of_class
-    coff = np.array([1, 5, 10])
-    weights = weights * coff
+        weights = background_pixels / pixels_of_class
+        #coff = np.array([1, 5, 10])
+        #print(f'Weights coff are {weights_coff}')
+        weights = weights * weights_coff
 
-    overlaps = K.sum(y_pred * y_true, axis=1)
-    total = K.sum(y_pred + y_true, axis=1)
+        overlaps = K.sum(y_pred * y_true, axis=1)
+        total = K.sum(y_pred + y_true, axis=1)
 
-    numerator = 2. * (weights * overlaps)
-    denominator = total * weights
+        numerator = 2. * (weights * overlaps)
+        denominator = total * weights
 
-    return - K.mean( numerator / denominator)
+        return - K.mean( numerator / denominator)
+    return loss
 
 def generalised_dice_loss_3D(y_true, y_pred):
     """

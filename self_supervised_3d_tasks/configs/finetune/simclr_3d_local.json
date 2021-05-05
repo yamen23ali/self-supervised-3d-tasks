@@ -3,7 +3,7 @@
   "data_dir_train": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result_resized/train",
   "data_dir_test": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result_resized/test",
   "model_checkpoint": "/Users/d070867/netstore/workspace/simclr_pancreas3d_4/weights-improvement-001.hdf5",
-  "finetuned_model": "/Users/d070867/netstore/workspace/simclr_pancreas3d_4/weights-improvement-001_test_22/plots/split_10/repetition_0/finetuned_model.hdf5",
+  "finetuned_model": "/Users/d070867/netstore/workspace/simclr_pancreas3d_4/weights-improvement-001_test_11/plots/split_10/repetition_0/weights-improvement-001.hdf5",
   "prediction_results_path": "/Users/d070867/netstore/workspace/simclr_pancreas3d_4/weights-improvement-001_test_22/plots/split_10/repetition_0/",
   "class_distribution_path": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result_resized",
   "dataset_name": "pancreas3d",
@@ -22,7 +22,8 @@
   "num_layers": 2,
   "data_cropped": false,
 
-  "loss": "yamen_dice_loss_3D",
+  "loss": "custom_dice_loss",
+  "weights_coff": [0.1, 20, 100],
   "scores": ["dice", "jaccard", "dice_pancreas_0", "dice_pancreas_1", "dice_pancreas_2"],
   "metrics": ["accuracy", "weighted_dice_coefficient", "weighted_dice_coefficient_per_class_pancreas"],
   "train_data_generator_args": { "classes_num": 3},

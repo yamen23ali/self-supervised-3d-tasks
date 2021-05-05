@@ -12,14 +12,14 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
 from tensorflow.python.keras import Model
 from tensorflow.python.keras.callbacks import CSVLogger
-
+import tensorflow.keras as keras
 import self_supervised_3d_tasks.utils.metrics as metrics
 from self_supervised_3d_tasks.utils.callbacks import TerminateOnNaN, NaNLossError, LogCSVWithStart
 from self_supervised_3d_tasks.utils.metrics import weighted_sum_loss, jaccard_distance, \
     weighted_categorical_crossentropy, weighted_dice_coefficient, weighted_dice_coefficient_loss, \
     weighted_dice_coefficient_per_class, brats_wt_metric, brats_et_metric, brats_tc_metric, \
     enhanced_weighted_dice_coefficient_loss, generalised_dice_loss_3D,\
-    yamen_dice_loss_3D
+    custom_dice_loss
 from self_supervised_3d_tasks.test_data_backend import CvDataKaggle, StandardDataLoader
 from self_supervised_3d_tasks.train import (
     keras_algorithm_list,
@@ -90,7 +90,7 @@ def make_custom_metrics(metrics):
     return metrics
 
 
-def make_custom_loss(loss):
+def make_custom_loss(loss, kwargs):
     if loss == "weighted_sum_loss":
         loss = weighted_sum_loss()
     elif loss == "jaccard_distance":
@@ -103,8 +103,9 @@ def make_custom_loss(loss):
         loss = enhanced_weighted_dice_coefficient_loss
     elif loss == "generalised_dice_loss_3D":
         loss = generalised_dice_loss_3D
-    elif loss == "yamen_dice_loss_3D":
-        loss = yamen_dice_loss_3D
+    elif loss == "custom_dice_loss":
+        print(kwargs)
+        loss = custom_dice_loss(kwargs['weights_coff'])
 
     return loss
 
@@ -172,7 +173,7 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
     print(loss)
 
     metrics = make_custom_metrics(metrics)
-    loss = make_custom_loss(loss)
+    loss = make_custom_loss(loss, kwargs)
 
     if load_weights:
         print("Loading weights")
@@ -189,8 +190,11 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
     print_flat_summary(model)
     print(working_dir)
 
+    mc_c = keras.callbacks.ModelCheckpoint(str(Path(plots_path) / "weights-improvement-{epoch:03d}.hdf5"), monitor="val_loss",
+                                           mode="min", save_best_only=True)
+
     if epochs > 0:
-        callbacks = [TerminateOnNaN()]
+        callbacks = [TerminateOnNaN(), mc_c]
 
         logging_csv = False
         if logging_path is not None:

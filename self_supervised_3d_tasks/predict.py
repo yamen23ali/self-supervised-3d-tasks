@@ -11,6 +11,7 @@ import tensorflow as tf
 import json
 from tensorflow.python.keras import Model
 from tensorflow.keras.optimizers import Adam
+from self_supervised_3d_tasks.finetune import make_scores
 
 from self_supervised_3d_tasks.test_data_backend import CvDataKaggle, StandardDataLoader
 from self_supervised_3d_tasks.train import (
@@ -31,6 +32,7 @@ def predict(
     clipnorm=1,
     clipvalue=1,
     lr=1e-3,
+    scores=[],
     **kwargs):
 
     algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
@@ -56,8 +58,10 @@ def predict(
         metrics=['accuracy'])
 
     y_pred = model.predict(x_test, batch_size=batch_size)
-    y_pred = np.argmax(y_pred, axis=-1)
+    scores_f = make_scores(y_test, y_pred, scores)
+    print(scores_f)
 
+    y_pred = np.argmax(y_pred, axis=-1)
     for i in range(0,y_pred.shape[0]):
         np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
 
@@ -115,6 +119,6 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
     print(f'Test - Class 1 { (test_counts[1]*100)/ total}')
     print(f'Test - Class 2 { (test_counts[2]*100)/ total}')
 
-#init(predict, "predict")
+init(predict, "predict")
 #init(get_hist_all, "hist")
-init(get_hist_per_image, "hist")
+#init(get_hist_per_image, "hist")
