@@ -57,13 +57,21 @@ def predict(
         loss='binary_crossentropy',
         metrics=['accuracy'])
 
+    print_flat_summary(model)
+
+    repeate = 100
     y_pred = model.predict(x_test, batch_size=batch_size)
+
+    for i in range(0,repeate):
+        y_pred = y_pred + model.predict(x_test, batch_size=batch_size)
+
+    y_pred = y_pred / repeate
     scores_f = make_scores(y_test, y_pred, scores)
     print(scores_f)
 
-    y_pred = np.argmax(y_pred, axis=-1)
-    for i in range(0,y_pred.shape[0]):
-        np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
+    #y_pred = np.argmax(y_pred, axis=-1)
+    #for i in range(0,y_pred.shape[0]):
+    #    np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
 
 def get_hist_per_image(data_dir_train, **kwargs):
     label_dir = data_dir_train + "_labels"

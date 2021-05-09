@@ -21,6 +21,7 @@
   "data_dim_z": 51,
   "num_layers": 2,
   "data_cropped": false,
+  "dropout": 0.5,
 
   "loss": "custom_dice_loss",
   "weights_coff": [0.1, 20, 100],
