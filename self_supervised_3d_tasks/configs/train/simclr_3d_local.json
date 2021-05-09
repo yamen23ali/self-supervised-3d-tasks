@@ -22,6 +22,7 @@
   "data_dim_z": 64,
   "num_layers": 2,
   "data_cropped": false,
+  "dropout": 0.1,
 
 
   "top_architecture": "big_fully",

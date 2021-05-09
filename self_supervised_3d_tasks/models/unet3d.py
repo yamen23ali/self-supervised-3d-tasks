@@ -10,11 +10,15 @@ from tensorflow.keras.layers import (
     UpSampling3D,
     Input,
     concatenate,
-    AveragePooling3D
+    AveragePooling3D,
+    Lambda
 )
 from tensorflow.keras.models import Model
 from tensorflow.keras.utils import plot_model
+from tensorflow.keras import backend as K
 
+def PermaDropout(rate):
+    return Lambda(lambda x: K.dropout(x, level=rate))
 
 def upsample_conv_3d(filters, kernel_size, strides, padding):
     return Conv3DTranspose(filters, kernel_size, strides=strides, padding=padding)
@@ -34,6 +38,8 @@ def conv3d_block(
         kernel_initializer="he_normal",
         padding="same",
 ):
+    print(f'Dopout is {dropout}')
+
     c = Conv3D(
         filters,
         kernel_size,
@@ -44,7 +50,8 @@ def conv3d_block(
     if use_batch_norm:
         c = BatchNormalization()(c)
     if dropout > 0.0:
-        c = Dropout(dropout)(c)
+        #c = Dropout(dropout)(c)
+        c = PermaDropout(dropout)(c)
     c = Conv3D(
         filters,
         kernel_size,

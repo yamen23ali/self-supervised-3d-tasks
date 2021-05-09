@@ -296,7 +296,7 @@ def apply_encoder_model_3d(
         model, layer_data = get_encoder_model_3d(encoder_architecture, input_shape)
     else:
         model, layer_data = downconv_model_3d(
-            input_shape, num_layers=num_layers, pooling=pooling, filters=enc_filters, **model_params
+            input_shape, num_layers=num_layers, pooling=pooling, filters=enc_filters, **model_params, **kwargs
         )
 
     return model, layer_data
