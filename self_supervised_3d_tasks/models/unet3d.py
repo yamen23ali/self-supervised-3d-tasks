@@ -38,7 +38,7 @@ def conv3d_block(
         kernel_initializer="he_normal",
         padding="same",
 ):
-    print(f'Dopout is {dropout}')
+    #print(f'Dopout is {dropout}')
 
     c = Conv3D(
         filters,

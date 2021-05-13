@@ -18,13 +18,13 @@ def get_data_generators_internal(data_path, files, data_generator, train_split=N
         val_split = int(len(files) * val_split)
 
         # Create lists
-        print(f'All {files}')
+        #print(f'All {files}')
         train = files[0:train_split]
-        print(f'Train {train}')
+        #print(f'Train {train}')
         val = files[train_split:train_split + val_split]
-        print(f'Val {val}')
+        #print(f'Val {val}')
         test = files[train_split + val_split:]
-        print(f'Test {test}')
+        #print(f'Test {test}')
 
         # create generators
         train_data_generator = data_generator(data_path, train, **train_data_generator_args)
@@ -125,14 +125,11 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
     with open(f'{class_distribution_path}/hist.json') as json_file:
         data = json.load(json_file)
 
-    print(files)
-    print(train_split)
-
     train_split = int(len(files) * train_split)
     train_files = []
 
     for i in range(200):
-        print(f'Trying to achieve dist, trial {i}=====')
+        #print(f'Trying to achieve dist, trial {i}=====')
 
         random.shuffle(files)
         train_files = files[:train_split]
@@ -148,8 +145,8 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
         class1_dist = int((class1*100 / total)*100)
         class2_dist = int((class2*100 / total)*1000)
 
-        print(class1_dist)
-        print(class2_dist)
+        #print(class1_dist)
+        #print(class2_dist)
 
         if (class2_dist >= 20 and class2_dist <= 30) and (class1_dist >= 20 and class1_dist <=30):
             return files

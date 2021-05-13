@@ -57,13 +57,13 @@ def predict(
         loss='binary_crossentropy',
         metrics=['accuracy'])
 
-    print_flat_summary(model)
+    #print_flat_summary(model)
 
     repeate = 100
     y_pred = model.predict(x_test, batch_size=batch_size)
 
-    for i in range(0,repeate):
-        y_pred = y_pred + model.predict(x_test, batch_size=batch_size)
+    #for i in range(0,repeate):
+    #    y_pred = y_pred + model.predict(x_test, batch_size=batch_size)
 
     y_pred = y_pred / repeate
     scores_f = make_scores(y_test, y_pred, scores)
@@ -72,6 +72,24 @@ def predict(
     #y_pred = np.argmax(y_pred, axis=-1)
     #for i in range(0,y_pred.shape[0]):
     #    np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
+
+def get_best_model(files):
+    models = [file_name  for file_name in files if 'hdf5' in file_name]
+    models.sort(reverse=True)
+    return models[0]
+
+def predict_all(
+    finetuned_model=None,
+    **kwargs):
+
+    for repetition_dir in os.walk(finetuned_model):
+        if 'repetition' not in repetition_dir[0]: continue
+        print("========================")
+        best_model = get_best_model(repetition_dir[2])
+        best_model_path = f'{repetition_dir[0]}/{best_model}'
+        print(best_model_path)
+        predict(finetuned_model=best_model_path, **kwargs)
+        print("========================")
 
 def get_hist_per_image(data_dir_train, **kwargs):
     label_dir = data_dir_train + "_labels"
@@ -127,6 +145,7 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
     print(f'Test - Class 1 { (test_counts[1]*100)/ total}')
     print(f'Test - Class 2 { (test_counts[2]*100)/ total}')
 
-init(predict, "predict")
+#init(predict, "predict")
+init(predict_all, "predict_all")
 #init(get_hist_all, "hist")
 #init(get_hist_per_image, "hist")
