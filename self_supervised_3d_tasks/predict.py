@@ -23,6 +23,35 @@ from self_supervised_3d_tasks.utils.model_utils import (
     print_flat_summary)
 from self_supervised_3d_tasks.utils.model_utils import init
 
+def average_mc_dropout(model, x_test, batch_size, repeate):
+
+    print("Applying MDC average")
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+
+    for i in range(0,repeate):
+        y_pred = y_pred + model.predict(x_test, batch_size=batch_size)
+
+    y_pred = y_pred / repeate
+
+    return y_pred
+
+def union_mc_dropout(model, x_test, batch_size, repeate):
+
+    print("Applying MDC union")
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+    unioned_predictions = np.zeros(y_pred.shape)
+    unioned_predictions = unioned_predictions.reshape(-1,3)
+    rows = np.arange(len(unioned_predictions))
+
+    for i in range(0,repeate):
+        y_pred = model.predict(x_test, batch_size=batch_size)
+        maxes = np.argmax(y_pred, axis=-1).flatten()
+        unioned_predictions[rows, maxes] = unioned_predictions[rows, maxes] + 1
+
+    return unioned_predictions.reshape(y_pred.shape)
+
 def predict(
     algorithm="simclr",
     finetuned_model=None,
@@ -33,6 +62,8 @@ def predict(
     clipvalue=1,
     lr=1e-3,
     scores=[],
+    mc_dropout_mode=None,
+    mc_dropout_repetetions=1000,
     **kwargs):
 
     algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
@@ -59,13 +90,15 @@ def predict(
 
     #print_flat_summary(model)
 
-    repeate = 100
-    y_pred = model.predict(x_test, batch_size=batch_size)
+    y_pred = None
 
-    #for i in range(0,repeate):
-    #    y_pred = y_pred + model.predict(x_test, batch_size=batch_size)
+    if mc_dropout_mode=='average':
+        y_pred = average_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
+    elif mc_dropout_mode=='union':
+        y_pred = union_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
+    else:
+        y_pred = model.predict(x_test, batch_size=batch_size)
 
-    y_pred = y_pred / repeate
     scores_f = make_scores(y_test, y_pred, scores)
     print(scores_f)
 
