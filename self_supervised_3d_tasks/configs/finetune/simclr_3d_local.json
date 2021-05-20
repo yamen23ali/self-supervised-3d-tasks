@@ -8,8 +8,8 @@
   "class_distribution_path": "/Users/d070867/netstore/workspace/cpc_pancreas3d/Task07_Pancreas/Task07_Pancreas/result_resized",
   "dataset_name": "pancreas3d",
   "use_cpu": true,
-  "mc_dropout_mode": "union",
-  "mc_dropout_repetetions": 100,
+  "mc_dropout_mode": "borda",
+  "mc_dropout_repetetions": 1,
 
   "data_is_3D": true,
   "val_split": 0.2,

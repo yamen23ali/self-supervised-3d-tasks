@@ -52,6 +52,25 @@ def union_mc_dropout(model, x_test, batch_size, repeate):
 
     return unioned_predictions.reshape(y_pred.shape)
 
+def borda_mc_dropout(model, x_test, batch_size, repeate):
+
+    print("Applying MDC Borda")
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+    borda_predictions = np.zeros(y_pred.shape)
+    borda_predictions = borda_predictions.reshape(-1,3)
+    rows = np.arange(len(borda_predictions))
+
+    for i in range(0,repeate):
+        y_pred = model.predict(x_test, batch_size=batch_size)
+        sorted_indices = np.argsort(y_pred, axis=-1)
+
+        for j in range(0,3):
+            indices = sorted_indices[:,:,:,:,j].flatten()
+            borda_predictions[rows, indices] = borda_predictions[rows, indices] + (3-j)
+
+    return borda_predictions.reshape(y_pred.shape)
+
 def predict(
     algorithm="simclr",
     finetuned_model=None,
@@ -96,6 +115,8 @@ def predict(
         y_pred = average_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
     elif mc_dropout_mode=='union':
         y_pred = union_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
+    elif mc_dropout_mode=='borda':
+        y_pred = borda_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
     else:
         y_pred = model.predict(x_test, batch_size=batch_size)
 
