@@ -65,9 +65,9 @@ def borda_mc_dropout(model, x_test, batch_size, repeate):
         y_pred = model.predict(x_test, batch_size=batch_size)
         sorted_indices = np.argsort(y_pred, axis=-1)
 
-        for j in range(0,3):
+        for j in range(1,3):
             indices = sorted_indices[:,:,:,:,j].flatten()
-            borda_predictions[rows, indices] = borda_predictions[rows, indices] + (3-j)
+            borda_predictions[rows, indices] = borda_predictions[rows, indices] + j
 
     return borda_predictions.reshape(y_pred.shape)
 
