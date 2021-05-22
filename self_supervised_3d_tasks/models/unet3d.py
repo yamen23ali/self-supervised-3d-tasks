@@ -67,8 +67,7 @@ def conv3d_block(
 def downconv_model_3d(
         input_shape,
         use_batch_norm=True,
-        use_dropout_on_downsampling=True,
-        dropout=0.5,
+        dropout_downconv=0.5,
         dropout_change_per_layer=0.0,
         filters=16,
         num_layers=4,
@@ -79,22 +78,18 @@ def downconv_model_3d(
     inputs = Input(input_shape)
     x = inputs
 
-    if not use_dropout_on_downsampling:
-        dropout = 0.0
-        dropout_change_per_layer = 0.0
-
     down_layers = []
     for l in range(num_layers):
         x = conv3d_block(
-            inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout
+            inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout_downconv
         )
         down_layers.append(x)
         x = MaxPooling3D((2, 2, 2))(x)
-        dropout += dropout_change_per_layer
+        dropout_downconv += dropout_change_per_layer
         filters = filters * 2  # double the number of filters with each layer
 
     x = conv3d_block(
-        inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout
+        inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout_downconv
     )
 
     if pooling == "max":
@@ -110,8 +105,7 @@ def upconv_model_3d(
         num_classes=3,
         use_batch_norm=True,
         upsample_mode="deconv",  # 'deconv' or 'simple'
-        use_dropout_on_upsampling=True,
-        dropout=0.5,
+        dropout_upconv=0.5,
         dropout_change_per_layer=0.0,
         filters=128,
         down_layers=(),
@@ -119,7 +113,6 @@ def upconv_model_3d(
         **kwargs
 ):
     print("==== In upconv=======")
-    print(use_dropout_on_upsampling)
     inp = Input(input_shape)
     inputs = [inp]
     x = inp
@@ -127,18 +120,15 @@ def upconv_model_3d(
         upsample = upsample_conv_3d
     else:
         upsample = upsample_simple_3d
-    if not use_dropout_on_upsampling:
-        dropout = 0.0
-        dropout_change_per_layer = 0.0
     for conv in reversed(down_layers):
         filters //= 2  # decreasing number of filters with each layer
-        dropout -= dropout_change_per_layer
+        dropout_upconv -= dropout_change_per_layer
         x = upsample(filters, (2, 2, 2), strides=(2, 2, 2), padding="same")(x)
         c_in = Input((int(x) for x in conv.shape[1:]))
         inputs.append(c_in)
         x = concatenate([x, c_in])
         x = conv3d_block(
-            inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout
+            inputs=x, filters=filters, use_batch_norm=use_batch_norm, dropout=dropout_upconv
         )
     outputs = Conv3D(num_classes, (1, 1, 1), activation=output_activation)(x)
     model = Model(inputs=inputs, outputs=[outputs])
@@ -150,9 +140,8 @@ def custom_unet_3d(
         num_classes=1,
         use_batch_norm=True,
         upsample_mode="deconv",  # 'deconv' or 'simple'
-        use_dropout_on_upsampling=False,
-        use_dropout_on_downsampling=False,
-        dropout=0.3,
+        dropout_upconv=0.5,
+        dropout_downconv=0.5,
         dropout_change_per_layer=0.0,
         filters=16,
         num_layers=4,
@@ -161,8 +150,7 @@ def custom_unet_3d(
     downconv, data = downconv_model_3d(
         input_shape,
         use_batch_norm=use_batch_norm,
-        use_dropout_on_downsampling=use_dropout_on_downsampling,
-        dropout=dropout,
+        dropout_downconv=dropout_downconv,
         dropout_change_per_layer=dropout_change_per_layer,
         filters=filters,
         num_layers=num_layers,
@@ -173,8 +161,7 @@ def custom_unet_3d(
         num_classes=num_classes,
         use_batch_norm=use_batch_norm,
         upsample_mode=upsample_mode,  # 'deconv' or 'simple'
-        use_dropout_on_upsampling=use_dropout_on_upsampling,
-        dropout=dropout,
+        dropout_upconv=dropout_upconv,
         dropout_change_per_layer=dropout_change_per_layer,
         filters=data[1],
         down_layers=data[0],

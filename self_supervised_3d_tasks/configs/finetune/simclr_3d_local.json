@@ -11,9 +11,8 @@
 
   "mc_dropout_mode": "borda",
   "mc_dropout_repetetions": 1,
-  "dropout": 0.3,
-  "use_dropout_on_downsampling": true,
-  "use_dropout_on_upsampling": true,
+  "dropout_downconv": 0.1,
+  "dropout_upconv": 0.0,
 
   "data_is_3D": true,
   "val_split": 0.2,
