@@ -115,7 +115,7 @@ def get_prediction_model(name, in_shape, include_top, algorithm_instance, num_cl
         inputs_up = [x] + inputs_skip
 
         model_up_out = upconv_model_3d(x.shape[1:], down_layers=algorithm_instance.layer_data[0],
-                                       filters=algorithm_instance.layer_data[1], num_classes=num_classes)(inputs_up)
+                                       filters=algorithm_instance.layer_data[1], num_classes=num_classes,**kwargs)(inputs_up)
 
         return Model(inputs=[first_input, *inputs_skip], outputs=model_up_out)
     elif name == "unet_3d_upconv_patches":

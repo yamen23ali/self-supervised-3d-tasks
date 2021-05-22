@@ -38,7 +38,7 @@ def conv3d_block(
         kernel_initializer="he_normal",
         padding="same",
 ):
-    #print(f'Dopout is {dropout}')
+    print(f'Dopout is {dropout}')
 
     c = Conv3D(
         filters,
@@ -67,6 +67,7 @@ def conv3d_block(
 def downconv_model_3d(
         input_shape,
         use_batch_norm=True,
+        use_dropout_on_downsampling=True,
         dropout=0.5,
         dropout_change_per_layer=0.0,
         filters=16,
@@ -74,8 +75,13 @@ def downconv_model_3d(
         pooling=None,
         **kwargs
 ):
+    print("==== In downconv=======")
     inputs = Input(input_shape)
     x = inputs
+
+    if not use_dropout_on_downsampling:
+        dropout = 0.0
+        dropout_change_per_layer = 0.0
 
     down_layers = []
     for l in range(num_layers):
@@ -112,6 +118,8 @@ def upconv_model_3d(
         output_activation="softmax",  # 'sigmoid' or 'softmax'
         **kwargs
 ):
+    print("==== In upconv=======")
+    print(use_dropout_on_upsampling)
     inp = Input(input_shape)
     inputs = [inp]
     x = inp
@@ -143,6 +151,7 @@ def custom_unet_3d(
         use_batch_norm=True,
         upsample_mode="deconv",  # 'deconv' or 'simple'
         use_dropout_on_upsampling=False,
+        use_dropout_on_downsampling=False,
         dropout=0.3,
         dropout_change_per_layer=0.0,
         filters=16,
@@ -152,6 +161,7 @@ def custom_unet_3d(
     downconv, data = downconv_model_3d(
         input_shape,
         use_batch_norm=use_batch_norm,
+        use_dropout_on_downsampling=use_dropout_on_downsampling,
         dropout=dropout,
         dropout_change_per_layer=dropout_change_per_layer,
         filters=filters,
