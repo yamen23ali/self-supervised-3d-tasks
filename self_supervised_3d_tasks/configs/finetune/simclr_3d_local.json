@@ -9,10 +9,11 @@
   "dataset_name": "pancreas3d",
   "use_cpu": true,
 
-  "mc_dropout_mode": "borda",
+  "mc_dropout_mode": "union",
   "mc_dropout_repetetions": 1,
   "dropout_downconv": 0.1,
   "dropout_upconv": 0.0,
+  "union_class": 2,
 
   "data_is_3D": true,
   "val_split": 0.2,

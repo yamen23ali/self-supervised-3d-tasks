@@ -36,21 +36,37 @@ def average_mc_dropout(model, x_test, batch_size, repeate):
 
     return y_pred
 
-def union_mc_dropout(model, x_test, batch_size, repeate):
+def majority_mc_dropout(model, x_test, batch_size, repeate):
 
-    print("Applying MDC union")
+    print("Applying MDC majority")
 
     y_pred = model.predict(x_test, batch_size=batch_size)
-    unioned_predictions = np.zeros(y_pred.shape)
-    unioned_predictions = unioned_predictions.reshape(-1,3)
-    rows = np.arange(len(unioned_predictions))
+    majority_predictions = np.zeros(y_pred.shape)
+    majority_predictions = majority_predictions.reshape(-1,3)
+    rows = np.arange(len(majority_predictions))
 
     for i in range(0,repeate):
         y_pred = model.predict(x_test, batch_size=batch_size)
         maxes = np.argmax(y_pred, axis=-1).flatten()
-        unioned_predictions[rows, maxes] = unioned_predictions[rows, maxes] + 1
+        majority_predictions[rows, maxes] = majority_predictions[rows, maxes] + 1
 
-    return unioned_predictions.reshape(y_pred.shape)
+    return majority_predictions.reshape(y_pred.shape)
+
+def weighted_majority_mc_dropout(model, x_test, batch_size, repeate):
+
+    print("Applying MDC weighted majority")
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+    weighted_majority_predictions = np.zeros(y_pred.shape)
+    weighted_majority_predictions = weighted_majority_predictions.reshape(-1,3)
+    rows = np.arange(len(weighted_majority_predictions))
+
+    for i in range(0,repeate):
+        y_pred = model.predict(x_test, batch_size=batch_size)
+        maxes = np.argmax(y_pred, axis=-1).flatten()
+        weighted_majority_predictions[rows, maxes] = weighted_majority_predictions[rows, maxes] + (maxes + 1)
+
+    return weighted_majority_predictions.reshape(y_pred.shape)
 
 def borda_mc_dropout(model, x_test, batch_size, repeate):
 
@@ -71,6 +87,29 @@ def borda_mc_dropout(model, x_test, batch_size, repeate):
 
     return borda_predictions.reshape(y_pred.shape)
 
+def union_mc_dropout(model, x_test, batch_size, repeate, union_class):
+
+    print("Applying MDC union")
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+    union_predictions = np.zeros(y_pred.shape)
+    union_predictions = union_predictions.reshape(-1,3)
+    rows = np.arange(len(union_predictions))
+
+    for i in range(0,2):
+        y_pred = model.predict(x_test, batch_size=batch_size)
+        maxes = np.argmax(y_pred, axis=-1).flatten()
+        union_predictions[rows, maxes] = union_predictions[rows, maxes] + 1
+
+    union_class_predicitions = union_predictions[:,union_class]
+    union_indices = union_class_predicitions > 0
+
+    for i in range(0,3):
+        if i != union_class:
+            union_predictions[union_indices, i] = 0
+
+    return union_predictions.reshape(y_pred.shape)
+
 def predict(
     algorithm="simclr",
     finetuned_model=None,
@@ -83,6 +122,7 @@ def predict(
     scores=[],
     mc_dropout_mode=None,
     mc_dropout_repetetions=1000,
+    union_class=2,
     **kwargs):
 
     algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
@@ -113,10 +153,14 @@ def predict(
 
     if mc_dropout_mode=='average':
         y_pred = average_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
-    elif mc_dropout_mode=='union':
-        y_pred = union_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
+    elif mc_dropout_mode=='majority':
+        y_pred = majority_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
+    elif mc_dropout_mode=='weighted_majority':
+        y_pred = weighted_majority_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
     elif mc_dropout_mode=='borda':
         y_pred = borda_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
+    elif mc_dropout_mode=='union':
+        y_pred = union_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions, union_class)
     else:
         y_pred = model.predict(x_test, batch_size=batch_size)
 
