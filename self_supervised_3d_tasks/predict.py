@@ -96,7 +96,7 @@ def union_mc_dropout(model, x_test, batch_size, repeate, union_class):
     union_predictions = union_predictions.reshape(-1,3)
     rows = np.arange(len(union_predictions))
 
-    for i in range(0,2):
+    for i in range(0,repeate):
         y_pred = model.predict(x_test, batch_size=batch_size)
         maxes = np.argmax(y_pred, axis=-1).flatten()
         union_predictions[rows, maxes] = union_predictions[rows, maxes] + 1
@@ -183,7 +183,7 @@ def predict(
     elif mc_dropout_mode=='union':
         y_pred = union_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions, union_class)
     elif mc_dropout_mode=='weighted_probs':
-        y_pred = weighted_probs_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions, union_class, prob_weights)
+        y_pred = weighted_probs_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions, prob_weights)
     else:
         y_pred = model.predict(x_test, batch_size=batch_size)
 
