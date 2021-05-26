@@ -110,6 +110,26 @@ def union_mc_dropout(model, x_test, batch_size, repeate, union_class):
 
     return union_predictions.reshape(y_pred.shape)
 
+def weighted_probs_mc_dropout(model, x_test, batch_size, repeate, weights):
+
+    print("Applying MDC weighted probs")
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+    weighted_probs_predictions = np.zeros(y_pred.shape)
+    weighted_probs_predictions = weighted_probs_predictions.reshape(-1,3)
+    rows = np.arange(len(weighted_probs_predictions))
+
+    for i in range(0,repeate):
+        y_pred = model.predict(x_test, batch_size=batch_size)
+
+        for j in range(0,3):
+            y_pred[:,:,:,:,j] = y_pred[:,:,:,:,j] * weights[j]
+
+        maxes = np.argmax(y_pred, axis=-1).flatten()
+        weighted_probs_predictions[rows, maxes] = weighted_probs_predictions[rows, maxes] + 1
+
+    return weighted_probs_predictions.reshape(y_pred.shape)
+
 def predict(
     algorithm="simclr",
     finetuned_model=None,
@@ -123,6 +143,7 @@ def predict(
     mc_dropout_mode=None,
     mc_dropout_repetetions=1000,
     union_class=2,
+    prob_weights=(1,3,6),
     **kwargs):
 
     algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
@@ -161,6 +182,8 @@ def predict(
         y_pred = borda_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
     elif mc_dropout_mode=='union':
         y_pred = union_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions, union_class)
+    elif mc_dropout_mode=='weighted_probs':
+        y_pred = weighted_probs_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions, union_class, prob_weights)
     else:
         y_pred = model.predict(x_test, batch_size=batch_size)
 
