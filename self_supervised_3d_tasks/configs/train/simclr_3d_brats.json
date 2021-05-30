@@ -1,0 +1,35 @@
+{
+  "algorithm": "simclr",
+  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm01/",
+  "data_dir": "/home/Yamen.Ali/netstore/brats_resized_pretask/",
+  "dataset_name": "brats",
+  "augmentations":[
+    "rotate_patch_3d", "keep_original",
+    "distort_color","apply_gaussian_blur", "add_gaussian_noise",
+    "apply_sobel_filter"
+  ],
+  "loss_function_name": "contrastive_loss_volume_level",
+  "position_based_mask": false,
+
+  "data_is_3D": true,
+  "temprature": 0.05,
+
+  "code_size": 512,
+  "enc_filters": 16,
+  "patches_in_depth": 5,
+  "patches_per_side": 4,
+  "data_dim": 128,
+  "data_dim_z": 128,
+  "num_layers": 4,
+  "data_cropped": false,
+  "dropout_downconv": 0.3,
+
+  "top_architecture": "big_fully",
+  "number_channels": 1,
+  "batch_size": 16,
+  "embed_dim": 64,
+  "load_weights": true,
+
+  "lr": 3e-3,
+  "epochs": 2000
+}
