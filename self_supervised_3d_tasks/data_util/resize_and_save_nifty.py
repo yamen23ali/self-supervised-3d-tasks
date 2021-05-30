@@ -290,7 +290,7 @@ def data_conversion_brats(split='train'):
     new_resolution = (192, 192, 160)
     train_path = '/mnt/dsets/brats/train/**/'
     validation_path = '/mnt/dsets/brats/test/**/'
-    result_path = "/home/Aiham.Taleb/netstore/brats/images_resized"
+    result_path = "/home/Yamen.Ali/netstore/brats_resized_128/"
     if split == 'train':
         path = train_path
     else:
@@ -426,6 +426,5 @@ if __name__ == "__main__":
     #data_conversion_ukb()
     #data_conversion_ukb_masks()
     #stack_ukb_3D_modalities()
-    #data_conversion_brats(split='train')
+    data_conversion_brats(split='train')
     # data_conversion_brats(split='test')
-    prepare_pancreas_data()
