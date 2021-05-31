@@ -146,8 +146,9 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
         class2_dist = int((classes_num[2]*100 / total)*10)
         class3_dist = int((classes_num[3]*100 / total)*100)
 
-        #print(class1_dist)
-        #print(class2_dist)
+        print(class1_dist)
+        print(class2_dist)
+        print(class3_dist)
 
         #if (class2_dist >= 20 and class2_dist <= 30) and (class1_dist >= 20 and class1_dist <=30):
         #    return files
