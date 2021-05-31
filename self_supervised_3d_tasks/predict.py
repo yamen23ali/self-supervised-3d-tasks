@@ -225,11 +225,20 @@ def get_hist_per_image(data_dir_train, **kwargs):
         data_y = np.load(path_label)
         y = np.rint(data_y).astype(np.int)
         labels, y_counts = np.unique(y, return_counts=True)
+
+        dict_count = ['0','0','0','0']
+
+        for i in range(0,4):
+            try:
+                dict_count[i] = str(y_counts[0])
+            except Exception as e:
+                print(e)
+
         data[file_name] = {
-            "class0": str(y_counts[0]),
-            "class1": str(y_counts[1]),
-            "class2": str(y_counts[2]),
-            "class3": str(y_counts[3])
+            "class0": dict_count[0],
+            "class1": dict_count[1],
+            "class2": dict_count[2],
+            "class3": dict_count[3]
         }
 
     with open(f'{data_dir_train}/hist.json', 'w') as outfile:

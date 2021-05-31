@@ -129,26 +129,29 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
     train_files = []
 
     for i in range(200):
-        #print(f'Trying to achieve dist, trial {i}=====')
+        print(f'Trying to achieve dist, trial {i}=====')
 
         random.shuffle(files)
         train_files = files[:train_split]
-        class0 = 0
-        class1 = 0
-        class2 = 0
+        classes_num = [0,0,0,0]
+        
         for file_name in train_files:
-            class0 += int(data[file_name]['class0'])
-            class1 += int(data[file_name]['class1'])
-            class2 += int(data[file_name]['class2'])
+            for i in range(0,4):
+                classes_num[i] += int(data[file_name][f'class{i}'])
 
-        total = class0 + class1 + class2
-        class1_dist = int((class1*100 / total)*100)
-        class2_dist = int((class2*100 / total)*1000)
+        total = np.sum(classes_num)
+
+        class1_dist = int((classes_num[1]*100 / total)*10)
+        class2_dist = int((classes_num[2]*100 / total)*10)
+        class3_dist = int((classes_num[3]*100 / total)*100)
 
         #print(class1_dist)
         #print(class2_dist)
 
-        if (class2_dist >= 20 and class2_dist <= 30) and (class1_dist >= 20 and class1_dist <=30):
+        #if (class2_dist >= 20 and class2_dist <= 30) and (class1_dist >= 20 and class1_dist <=30):
+        #    return files
+        
+        if (class1_dist >= 10 and class1_dist <= 20) and (class2_dist >= 20 and class2_dist <=30) and (class3_dist >= 63 and class3_dist <=73):
             return files
 
     return files
