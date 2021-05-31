@@ -150,7 +150,7 @@ def get_dataset_train(dataset_name, batch_size, f_train, f_val, train_split, kwa
         )
     elif dataset_name == 'brats' or dataset_name == 'ukb3d':
         return get_dataset_regular_train(
-            batch_size, f_train, f_val, train_split, data_generator=PatchSegmentationGenerator3D, **kwargs,
+            batch_size, f_train, f_val, train_split, data_generator=SegmentationGenerator3D, **kwargs,
         )
     elif dataset_name == "pancreas2d":
         return get_dataset_regular_train(
