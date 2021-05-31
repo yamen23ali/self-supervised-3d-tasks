@@ -169,7 +169,7 @@ def get_dataset_test(dataset_name, batch_size, f_test, kwargs):
         )
     elif dataset_name == 'brats' or dataset_name == 'ukb3d':
         gen_test = get_dataset_regular_test(
-            batch_size, f_test, data_generator=PatchSegmentationGenerator3D, **kwargs
+            batch_size, f_test, data_generator=SegmentationGenerator3D, **kwargs
         )
     elif dataset_name == "pancreas2d":
         gen_test = get_dataset_regular_test(
