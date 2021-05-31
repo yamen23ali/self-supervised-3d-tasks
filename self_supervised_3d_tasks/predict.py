@@ -228,7 +228,8 @@ def get_hist_per_image(data_dir_train, **kwargs):
         data[file_name] = {
             "class0": str(y_counts[0]),
             "class1": str(y_counts[1]),
-            "class2": str(y_counts[2])
+            "class2": str(y_counts[2]),
+            "class3": str(y_counts[3])
         }
 
     with open(f'{data_dir_train}/hist.json', 'w') as outfile:
@@ -239,7 +240,7 @@ def get_hist(data_dir):
     label_stem="_label"
     files = os.listdir(data_dir)
 
-    counts = { 0:0, 1:1, 2:2}
+    counts = { 0:0, 1:0, 2:0, 3:0}
 
     for file_name in files:
         path_label = Path("{}/{}".format(label_dir, file_name))
@@ -247,26 +248,30 @@ def get_hist(data_dir):
         data_y = np.load(path_label)
         y = np.rint(data_y).astype(np.int)
         labels, y_counts = np.unique(y, return_counts=True)
-        counts[0]+= y_counts[0]
-        counts[1]+= y_counts[1]
-        counts[2]+= y_counts[2]
+
+        for i in range(0, 4):
+            counts[i]+= y_counts[i]
 
     return counts
 
 def get_hist_all(data_dir_train, data_dir_test, **kwargs):
     train_counts = get_hist(data_dir_train)
-    total = train_counts[0] + train_counts[1] + train_counts[2]
-    print(f'Train - Class 0 { (train_counts[0]*100)/ total}')
-    print(f'Train - Class 1 { (train_counts[1]*100)/ total}')
-    print(f'Train - Class 2 { (train_counts[2]*100)/ total}')
+    total = 0
+
+    for i in range(0,4):
+        total+= train_counts[i]
+    for i in range(0,4):
+        print(f'Train - Class {i} { (train_counts[i]*100)/ total}')
 
     test_counts = get_hist(data_dir_test)
-    total = test_counts[0] + test_counts[1] + test_counts[2]
-    print(f'Test - Class 0 { (test_counts[0]*100)/ total}')
-    print(f'Test - Class 1 { (test_counts[1]*100)/ total}')
-    print(f'Test - Class 2 { (test_counts[2]*100)/ total}')
+    total = 0
+
+    for i in range(0,4):
+        total+= test_counts[i]
+    for i in range(0,4):
+        print(f'Test - Class {i} { (test_counts[i]*100)/ total}')
 
 #init(predict, "predict")
 init(predict_all, "predict_all")
-#init(get_hist_all, "hist")
-#init(get_hist_per_image, "hist")
+init(get_hist_all, "hist")
+init(get_hist_per_image, "hist")

@@ -1,0 +1,46 @@
+{
+  "algorithm": "simclr",
+  "data_dir_train": "/home/Yamen.Ali/netstore/brats_resized_128/train",
+  "data_dir_test": "/home/Yamen.Ali/netstore/brats_resized_128/test",
+  "model_checkpoint": "/home/Yamen.Ali/netstore/workspace_vm03/simclr_pancreas3d_7/weights-improvement-982.hdf5",
+  "class_distribution_path": "/home/Yamen.Ali/netstore/brats_resized_128/",
+  "dataset_name": "brats",
+  "ensure_class_distribution": true,
+
+  "data_is_3D": true,
+  "val_split": 0.05,
+
+  "code_size": 512,
+  "enc_filters": 16,
+  "patches_per_side": 4,
+  "data_dim": 128,
+  "data_dim_z": 128,
+  "num_layers": 4,
+  "dropout": 0.3,
+
+  "loss": "weighted_dice_loss",
+  "scores": ["dice", "jaccard", "brats_wt", "brats_tc", "brats_et"],
+  "metrics": ["accuracy", "weighted_dice_coefficient", "brats_metrics"],
+
+  "train_data_generator_args": { "classes_num": 3, "augment": true, "shuffle": true},
+  "val_data_generator_args": { "classes_num": 3, "augment": true, "shuffle": true},
+  "test_data_generator_args": { "classes_num": 3},
+
+  "top_architecture": "big_fully",
+  "prediction_architecture": "unet_3d_upconv",
+  "pooling": "max",
+  "number_channels": 4,
+  "batch_size": 4,
+
+  "exp_splits": [5, 10, 25, 50, 100],
+  "lr": 1e-3,
+  "epochs_initialized": 400,
+  "epochs_frozen": 0,
+  "epochs_random": 0,
+  "epochs_warmup": 25,
+  "repetitions": 3,
+  "load_weights": false,
+
+  "clipnorm": 1,
+  "clipvalue": 1
+}
