@@ -250,7 +250,10 @@ def get_hist(data_dir):
         labels, y_counts = np.unique(y, return_counts=True)
 
         for i in range(0, 4):
-            counts[i]+= y_counts[i]
+            try:
+                counts[i]+= y_counts[i]
+            except Exception as e:
+                print(e)
 
     return counts
 
