@@ -137,8 +137,8 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
         classes_num = [0,0,0,0]
         
         for file_name in train_files:
-            for i in range(0,4):
-                classes_num[i] += int(data[file_name][f'class{i}'])
+            for j in range(0,4):
+                classes_num[j] += int(data[file_name][f'class{j}'])
 
         total = np.sum(classes_num)
 

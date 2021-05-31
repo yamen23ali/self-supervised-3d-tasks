@@ -230,7 +230,7 @@ def get_hist_per_image(data_dir_train, **kwargs):
 
         for i in range(0,4):
             try:
-                dict_count[i] = str(y_counts[0])
+                dict_count[i] = str(y_counts[i])
             except Exception as e:
                 print(e)
 
