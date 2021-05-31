@@ -16,7 +16,9 @@
   "data_dim": 128,
   "data_dim_z": 128,
   "num_layers": 4,
-  "dropout": 0.3,
+  "num_classes": 4,
+  "dropout_downconv": 0.3,
+  "dropout_upconv": 0.3,
 
   "loss": "weighted_dice_loss",
   "scores": ["dice", "jaccard", "brats_wt", "brats_tc", "brats_et"],
