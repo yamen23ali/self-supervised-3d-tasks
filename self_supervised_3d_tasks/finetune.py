@@ -150,11 +150,18 @@ def get_scores_big_data(model, x_test, y_test, scores, step_size=40):
 
     return scores_f
 
-def plot_and_save(history, plots_path):
+def plot_and_save(history, plots_path, dataset_name):
+
     metrics_train = ['weighted_dice_coefficient', 'dice_class_0', 'dice_class_1', 'dice_class_2']
     metrics_val = ['val_weighted_dice_coefficient', 'val_dice_class_0', 'val_dice_class_1', 'val_dice_class_2']
     metrics_labels = ['Weighted Dice', 'Dice 0', 'Dice 1', 'Dice 2']
     files_names = ['Weighted_Dice', 'Dice_0', 'Dice_1', 'Dice_2']
+
+    if dataset_name == 'brats':
+        metrics_train = ['weighted_dice_coefficient', 'brats_wt_metric', 'brats_tc_metric', 'brats_et_metric']
+        metrics_val = ['val_weighted_dice_coefficient', 'val_brats_wt_metric', 'val_brats_tc_metric', 'val_brats_et_metric']
+        metrics_labels = ['Weighted Dice', 'Brats WT', 'Brats TC', 'Brats ET']
+        files_names = ['Weighted_Dice', 'Brats_WT', 'Brats_TC', 'Brats_ET']
 
     for i in range(0,len(metrics_train)):
         plt.plot(history.history[metrics_train[i]], label=f'Training')
@@ -168,7 +175,7 @@ def plot_and_save(history, plots_path):
 
 def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weights, x_test, y_test, lr,
                     batch_size, epochs, epochs_warmup, model_checkpoint, scores, loss, metrics, logging_path, kwargs,
-                    clipnorm=None, clipvalue=None, model_callback=None, working_dir=None, plots_path=None):
+                    clipnorm=None, clipvalue=None, model_callback=None, working_dir=None, plots_path=None, dataset_name='pancreas3d'):
     print(metrics)
     print(loss)
 
@@ -257,7 +264,7 @@ def run_single_test(algorithm_def, gen_train, gen_val, load_weights, freeze_weig
         )
 
 
-    plot_and_save(history, plots_path)
+    plot_and_save(history, plots_path, dataset_name)
 
     model.compile(optimizer=get_optimizer(clipnorm, clipvalue, lr), loss=loss, metrics=metrics)
     model.save_weights(f'{plots_path}/finetuned_model.hdf5')
@@ -415,7 +422,7 @@ def run_complex_test(
                                             batch_size, epochs_frozen, epochs_warmup, model_checkpoint, scores, loss,
                                             metrics,
                                             logging_a_path,
-                                            kwargs, clipnorm=clipnorm, clipvalue=clipvalue, plots_path=plots_path))  # frozen
+                                            kwargs, clipnorm=clipnorm, clipvalue=clipvalue, plots_path=plots_path, dataset_name=dataset_name))  # frozen
                 a_s.append(a)
             if epochs_initialized > 0:
                 logging_b_path = logging_base_path / f"split{train_split}initialized_rep{i}.log"
@@ -423,7 +430,7 @@ def run_complex_test(
                     lambda: run_single_test(algorithm_def, gen_train, gen_val, kwargs["load_weights"], False, x_test, y_test, lr,
                                             batch_size, epochs_initialized, epochs_warmup, model_checkpoint, scores,
                                             loss, metrics,
-                                            logging_b_path, kwargs, clipnorm=clipnorm, clipvalue=clipvalue, plots_path=plots_path))
+                                            logging_b_path, kwargs, clipnorm=clipnorm, clipvalue=clipvalue, plots_path=plots_path, dataset_name=dataset_name))
                 b_s.append(b)
             if epochs_random > 0:
                 logging_c_path = logging_base_path / f"split{train_split}random_rep{i}.log"
@@ -433,7 +440,7 @@ def run_complex_test(
                                             metrics,
                                             logging_c_path,
                                             kwargs, clipnorm=clipnorm, clipvalue=clipvalue,
-                                            working_dir=working_dir, plots_path=plots_path))  # random
+                                            working_dir=working_dir, plots_path=plots_path, dataset_name=dataset_name))  # random
                 c_s.append(c)
 
         def get_avg_score(list_abc, index):
