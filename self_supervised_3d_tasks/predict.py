@@ -284,6 +284,6 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
         print(f'Test - Class {i} { (test_counts[i]*100)/ total}')
 
 #init(predict, "predict")
-#init(predict_all, "predict_all")
-init(get_hist_all, "hist")
-init(get_hist_per_image, "hist")
+init(predict_all, "predict_all")
+#init(get_hist_all, "hist")
+#init(get_hist_per_image, "hist")

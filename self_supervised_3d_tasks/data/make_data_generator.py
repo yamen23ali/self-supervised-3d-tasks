@@ -135,10 +135,13 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
         random.shuffle(files)
         train_files = files[:train_split]
         classes_num = [0,0,0,0]
-        
+
         for file_name in train_files:
             for j in range(0,4):
-                classes_num[j] += int(data[file_name][f'class{j}'])
+                try:
+                    classes_num[j] += int(data[file_name][f'class{j}'])
+                except Exception as e:
+                    print(e)
 
         total = np.sum(classes_num)
 
@@ -152,7 +155,7 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
 
         #if (class2_dist >= 20 and class2_dist <= 30) and (class1_dist >= 20 and class1_dist <=30):
         #    return files
-        
+
         if (class1_dist >= 10 and class1_dist <= 20) and (class2_dist >= 20 and class2_dist <=30) and (class3_dist >= 63 and class3_dist <=73):
             return files
 
