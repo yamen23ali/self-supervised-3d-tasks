@@ -306,12 +306,12 @@ def data_conversion_brats(split='train'):
     t1_files = sorted(glob.glob(path + "*_t1.nii.gz", recursive=True))
     t2_files = sorted(glob.glob(path + "*_t2.nii.gz", recursive=True))
     # loading the training labels (the segmentation masks)
-    if split == 'train':
-        seg_files = sorted(glob.glob(path + "*_seg.nii.gz", recursive=True))
-    else:
+    seg_files = sorted(glob.glob(path + "*_seg.nii.gz", recursive=True))
+    if split == 'val':
         seg_files = sorted(glob.glob(path + "*_out.nii.gz", recursive=True))
 
     print("reading scans...")
+    print(len(seg_files))
     num_cores = multiprocessing.cpu_count()
     results = Parallel(n_jobs=num_cores)(
         delayed(read_mm_slice_brats)(flair_files, i, seg_files, t1_files, t1ce_files, t2_files, new_resolution) for i in
