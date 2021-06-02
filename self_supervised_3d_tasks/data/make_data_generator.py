@@ -146,8 +146,8 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
         total = np.sum(classes_num)
 
         class1_dist = int((classes_num[1]*100 / total)*10)
-        class2_dist = int((classes_num[2]*100 / total)*10)
-        class3_dist = int((classes_num[3]*100 / total)*100)
+        class2_dist = int((classes_num[2]*100 / total)*100)
+        class3_dist = int((classes_num[3]*100 / total)*10000)
 
         #print(class1_dist)
         #print(class2_dist)
@@ -156,7 +156,7 @@ def ensure_class_dist(data_path, class_distribution_path, files, train_split):
         #if (class2_dist >= 20 and class2_dist <= 30) and (class1_dist >= 20 and class1_dist <=30):
         #    return files
 
-        if (class1_dist >= 10 and class1_dist <= 20) and (class2_dist >= 20 and class2_dist <=30) and (class3_dist >= 63 and class3_dist <=73):
+        if (class1_dist >= 8) and (class2_dist >= 17) and (class3_dist >= 14):
             return files
 
     return files
