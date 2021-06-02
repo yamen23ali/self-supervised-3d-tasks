@@ -3,9 +3,14 @@
   "data_dir_train": "/home/Yamen.Ali/netstore/brats_resized_128/train",
   "data_dir_test": "/home/Yamen.Ali/netstore/brats_resized_128/test",
   "model_checkpoint": "/home/Yamen.Ali/netstore/workspace_vm03/simclr_pancreas3d_7/weights-improvement-982.hdf5",
+  "finetuned_model": "/Users/d070867/netstore/workspace/simclr_pancreas3d_4/weights-improvement-001_test_11/plots/",
   "class_distribution_path": "/home/Yamen.Ali/netstore/brats_resized_128/",
   "dataset_name": "brats",
   "ensure_class_distribution": true,
+
+  "mc_dropout_mode": "weighted_probs",
+  "mc_dropout_repetetions": 1,
+  "union_class": 2,
 
   "data_is_3D": true,
   "val_split": 0.05,

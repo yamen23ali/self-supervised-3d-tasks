@@ -13,6 +13,7 @@ from joblib import Parallel, delayed
 import math
 
 from self_supervised_3d_tasks.data_util.nifti_utils import read_scan_find_bbox
+from self_supervised_3d_tasks.data_util.brats_dataset_utils import norm
 
 
 def split_slices_to_single_files():
@@ -156,7 +157,7 @@ def data_generation_pancreas():
             traceback.print_tb(e.__traceback__)
             continue
 
-def crop_one_volume(volume, volume_size, volume_for_resize=None):
+def crop_one_volume(volume, volume_size, volume_for_resize=None, normalize=True):
     """
     get the bounding box of the non-zero region of an ND volume, crop/extract a subregion form an nd image.
     """
@@ -181,7 +182,10 @@ def crop_one_volume(volume, volume_size, volume_for_resize=None):
     output = volume[..., :][np.ix_(range(idx_min[0], idx_max[0]),
                                    range(idx_min[1], idx_max[1]),
                                    range(idx_min[2], idx_max[2]))]
-    return output
+    if normalize:
+        return norm(output)
+    else:
+        return norm
 
 
 def data_conversion_ukb():
@@ -287,9 +291,9 @@ def data_conversion_brats(split='train'):
     """
     :param split: can be 'train' or 'val'
     """
-    new_resolution = (192, 192, 160)
+    new_resolution = (128, 128, 128)
     train_path = '/mnt/dsets/brats/train/**/'
-    validation_path = '/mnt/dsets/brats/test/**/'
+    validation_path = '/mnt/dsets/brats/val/**/'
     result_path = "/home/Yamen.Ali/netstore/brats_resized_128/"
     if split == 'train':
         path = train_path
@@ -302,7 +306,11 @@ def data_conversion_brats(split='train'):
     t1_files = sorted(glob.glob(path + "*_t1.nii.gz", recursive=True))
     t2_files = sorted(glob.glob(path + "*_t2.nii.gz", recursive=True))
     # loading the training labels (the segmentation masks)
-    seg_files = sorted(glob.glob(path + "*_seg.nii.gz", recursive=True))
+    if split == 'train':
+        seg_files = sorted(glob.glob(path + "*_seg.nii.gz", recursive=True))
+    else:
+        seg_files = sorted(glob.glob(path + "*_out.nii.gz", recursive=True))
+
     print("reading scans...")
     num_cores = multiprocessing.cpu_count()
     results = Parallel(n_jobs=num_cores)(
@@ -345,7 +353,7 @@ def read_mm_slice_brats(flair_files, i, seg_files, t1_files, t1ce_files, t2_file
         t2_image = skTrans.resize(t2_image, new_resolution, order=1, preserve_range=True)
     seg_image = nib.load(seg_files[i]).get_fdata()
     try:
-        seg_image = crop_one_volume(seg_image, new_resolution, volume_for_resize=t1ce_copy)
+        seg_image = crop_one_volume(seg_image, new_resolution, volume_for_resize=t1ce_copy, normalize=False)
     except:
         seg_image = skTrans.resize(seg_image, new_resolution, order=0, preserve_range=True)
     seg_image = np.asarray(seg_image, dtype=np.int32)
