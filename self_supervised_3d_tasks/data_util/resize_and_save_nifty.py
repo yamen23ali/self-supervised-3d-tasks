@@ -185,7 +185,7 @@ def crop_one_volume(volume, volume_size, volume_for_resize=None, normalize=True)
     if normalize:
         return norm(output)
     else:
-        return norm
+        return output
 
 
 def data_conversion_ukb():
@@ -293,7 +293,7 @@ def data_conversion_brats(split='train'):
     """
     new_resolution = (128, 128, 128)
     train_path = '/mnt/dsets/brats/train/**/'
-    validation_path = '/mnt/dsets/brats/val/**/'
+    validation_path = '/mnt/dsets/brats/test/**/'
     result_path = "/home/Yamen.Ali/netstore/brats_resized_128/"
     if split == 'train':
         path = train_path
@@ -434,5 +434,5 @@ if __name__ == "__main__":
     #data_conversion_ukb()
     #data_conversion_ukb_masks()
     #stack_ukb_3D_modalities()
-    data_conversion_brats(split='train')
-    # data_conversion_brats(split='test')
+    #data_conversion_brats(split='train')
+    data_conversion_brats(split='val')
