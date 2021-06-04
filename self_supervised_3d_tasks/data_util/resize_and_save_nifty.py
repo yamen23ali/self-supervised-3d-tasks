@@ -448,7 +448,7 @@ def random_data_split():
     test_labels_path = "/home/Yamen.Ali/netstore/brats_resized_128_2/test_labels"
 
     images_path = "/home/Yamen.Ali/netstore/brats_resized_128/train"
-    labels_path = "/home/Yamen.Ali/netstore/brats_resized_128_2/train_labels"
+    labels_path = "/home/Yamen.Ali/netstore/brats_resized_128/train_labels"
 
     list_files_temp = np.array(os.listdir(images_path))
 
