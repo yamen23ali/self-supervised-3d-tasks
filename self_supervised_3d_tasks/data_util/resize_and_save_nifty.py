@@ -432,8 +432,8 @@ def stack_ukb_3D_modalities():
 def copy_files(files, images_path_from, labels_path_from, images_path_to, labels_path_to):
     for i, file_name in enumerate(files):
         name = file_name[:file_name.index('.')]
-        image_from = "{}/{}.npy".format(images_path_from, file_name)
-        image_to = "{}/{}.npy".format(images_path_to, file_name)
+        image_from = "{}/{}.npy".format(images_path_from, name)
+        image_to = "{}/{}.npy".format(images_path_to, name)
         copyfile(image_from, image_to)
 
         label_from = "{}/{}_label.npy".format(labels_path_from, name)
