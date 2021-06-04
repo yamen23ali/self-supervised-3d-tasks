@@ -14,7 +14,7 @@ import math
 
 from self_supervised_3d_tasks.data_util.nifti_utils import read_scan_find_bbox
 from self_supervised_3d_tasks.data_util.brats_dataset_utils import norm
-
+from shutil import copyfile
 
 def split_slices_to_single_files():
     result_path = "/mnt/mpws2019cl1/pancreas_data/img_slices_128_single"
@@ -429,10 +429,43 @@ def stack_ukb_3D_modalities():
         range(len(t2_flair_files)))
     print("done preprocessing images")
 
+def copy_files(files, images_path_from, labels_path_from, images_path_to, labels_path_to):
+    for i, file_name in enumerate(files):
+        name = file_name[:file_name.index('.')]
+        image_from = "{}/{}.npy".format(images_path_from, file_name)
+        image_to = "{}/{}.npy".format(images_path_to, file_name)
+        copyfile(image_from, image_to)
+
+        label_from = "{}/{}_label.npy".format(labels_path_from, name)
+        label_to = "{}/{}_label.npy".format(labels_path_to, name)
+        copyfile(label_from, label_to)
+
+def random_data_split():
+
+    training_images_path = "/home/Yamen.Ali/netstore/brats_resized_128_2/train"
+    training_labels_path = "/home/Yamen.Ali/netstore/brats_resized_128_2/train_labels"
+    test_images_path = "/home/Yamen.Ali/netstore/brats_resized_128_2/test"
+    test_labels_path = "/home/Yamen.Ali/netstore/brats_resized_128_2/test_labels"
+
+    images_path = "/home/Yamen.Ali/netstore/brats_resized_128/train"
+    labels_path = "/home/Yamen.Ali/netstore/brats_resized_128_2/train_labels"
+
+    list_files_temp = np.array(os.listdir(images_path))
+
+    test_size = int(0.3 * len(list_files_temp))
+    test_files_indices = np.random.choice(len(list_files_temp), size=test_size, replace=False)
+    test_files = list_files_temp[test_files_indices]
+
+    train_files = np.delete(list_files_temp, test_files_indices)
+
+    copy_files(train_files, images_path, labels_path, training_images_path, training_labels_path)
+    copy_files(test_files, images_path, labels_path, test_images_path, test_labels_path)
+
 
 if __name__ == "__main__":
     #data_conversion_ukb()
     #data_conversion_ukb_masks()
     #stack_ukb_3D_modalities()
     #data_conversion_brats(split='train')
-    data_conversion_brats(split='val')
+    #data_conversion_brats(split='val')
+    random_data_split()

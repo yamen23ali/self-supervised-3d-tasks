@@ -207,6 +207,11 @@ def score_dice_class(y, y_pred, class_to_predict):
         print(e)
         return None
 
+def score_dice_brats(y, y_pred):
+    j = jaccard_score(y, y_pred, average=None)
+
+    return np.average(np.array([(2 * x) / (1 + x) for x in j]))
+
 def brats_et(y, y_pred):
     y = np.argmax(y, axis=-1).flatten()
     y_pred = np.argmax(y_pred, axis=-1).flatten()
@@ -218,7 +223,7 @@ def brats_et(y, y_pred):
     pd_et[pd_et == 1] = 0
     pd_et[pd_et == 2] = 0
     pd_et[pd_et == 3] = 1
-    dice_et = score_dice(gt_et, pd_et)
+    dice_et = score_dice_brats(gt_et, pd_et)
     return dice_et
 
 
@@ -231,7 +236,7 @@ def brats_tc(y, y_pred):
     pd_tc = np.copy(y_pred).astype(np.int)
     pd_tc[pd_tc == 2] = 0
     pd_tc[pd_tc == 3] = 1
-    dice_tc = score_dice(gt_tc, pd_tc)
+    dice_tc = score_dice_brats(gt_tc, pd_tc)
     return dice_tc
 
 
@@ -244,7 +249,7 @@ def brats_wt(y, y_pred):
     pd_wt = np.copy(y_pred).astype(np.int)
     pd_wt[pd_wt == 2] = 1
     pd_wt[pd_wt == 3] = 1
-    dice_wt = score_dice(gt_wt, pd_wt)
+    dice_wt = score_dice_brats(gt_wt, pd_wt)
     return dice_wt
 
 
