@@ -136,6 +136,7 @@ def weighted_probs_mc_dropout(model, x_test, batch_size, repeate, weights):
 
     return weighted_probs_predictions.reshape(y_pred.shape)
 
+
 def predict(
     algorithm="simclr",
     finetuned_model=None,
@@ -204,6 +205,65 @@ def get_best_model(files):
     models = [file_name  for file_name in files if 'hdf5' in file_name]
     models.sort(reverse=True)
     return models[0]
+
+def get_worst_image_union(algorithm="simclr",
+    finetuned_model=None,
+    worst_image_union_path=None,
+    dataset_name="pancreas3d",
+    batch_size=5,
+    clipnorm=1,
+    clipvalue=1,
+    lr=1e-3,
+    scores=[],
+    mc_dropout_mode=None,
+    mc_dropout_repetetions=1000,
+    union_class=2,
+    prob_weights=(1,3,6),
+    **kwargs):
+
+    algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
+
+    data_loader = StandardDataLoader(
+        dataset_name,
+        batch_size,
+        algorithm_def,
+        **kwargs)
+    gen_train, gen_val, x_test, y_test = data_loader.get_dataset(0, 1)
+
+    enc_model = algorithm_def.get_finetuning_model()
+    pred_model = apply_prediction_model(
+        input_shape=enc_model.outputs[0].shape[1:],
+        algorithm_instance=algorithm_def,
+        **kwargs)
+    outputs = pred_model(enc_model.outputs)
+    model = Model(inputs=enc_model.inputs[0], outputs=outputs)
+    model.load_weights(finetuned_model)
+    model.compile(
+        optimizer=Adam(lr=lr, clipnorm=clipnorm, clipvalue=clipvalue),
+        loss='binary_crossentropy',
+        metrics=['accuracy'])
+
+    x_worst, y_worst, y_worst_pred  = [],[],[]
+    min_score = 100
+
+    for x,y in zip(x_test,y_test):
+        y_pred = model.predict(x, batch_size=1)
+        scores_f = make_scores(y, y_pred, scores)
+        if scores['brats_et'] < min_score:
+            min_score = scores['brats_et']
+            x_worst = x
+            y_worst = y
+            y_worst_pred = y_pred
+
+    print(min_score)
+
+    y_pred = union_mc_dropout(model, x_worst, 1, mc_dropout_repetetions, union_class)
+    scores_f = make_scores(y_worst, y_pred, scores)
+    print(min_score)
+
+    np.save(f'{worst_image_union_path}/image.npy', x_worst)
+    np.save(f'{worst_image_union_path}/label.npy', y_worst)
+    np.save(f'{worst_image_union_path}/pred.npy', y_worst_pred)
 
 def predict_all(
     finetuned_model=None,
@@ -290,6 +350,7 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
         print(f'Test - Class {i} { (test_counts[i]*100)/ total}')
 
 #init(predict, "predict")
-init(predict_all, "predict_all")
+#init(predict_all, "predict_all")
 #init(get_hist_all, "hist")
 #init(get_hist_per_image, "hist")
+init(get_worst_image_union, "get_worst_image_union")
