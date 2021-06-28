@@ -300,7 +300,8 @@ def get_worst_image_union(algorithm="simclr",
         dropout_upconv=dropout_upconv,
         **kwargs)
 
-    y_pred = union_mc_dropout(model, x_worst, 1, mc_dropout_repetetions, union_class)
+    #y_pred = union_mc_dropout(model, x_worst, 1, mc_dropout_repetetions, union_class)
+    y_pred = majority_mc_dropout(model, x_worst, 1, mc_dropout_repetetions)
     scores_f = make_scores(y_worst, y_pred, scores)
     print(scores_f)
 
