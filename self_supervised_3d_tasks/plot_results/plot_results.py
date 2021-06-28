@@ -29,7 +29,7 @@ def neighbour_smoothing(values, epochs, neighbour_count = 2):
 
 
 def get_metric_over_split(args, path, metric):
-    filename = Path(path) / "results.csv"
+    filename = Path(path)
     df = pandas.read_csv(filename)
 
     def percentage_string_to_int(string):
@@ -116,13 +116,14 @@ def draw_train_split_plot(paths, data_names, metric, skips = [], prefix="2d", me
 
     for index, path in enumerate(paths):
         data_name = data_names[index]
-        path = str(Path(path).expanduser())
+        #path = str(Path(path).expanduser())
+        #print(path)
 
-        config = list(Path(path).glob("*.json"))[0]
-        with open(config, mode="r") as file:
-            args = json.load(file)
+        #config = list(Path(path).glob("*.json"))[0]
+        #with open(config, mode="r") as file:
+        #    args = json.load(file)
         print(path)
-        splits, values = get_metric_over_split(args, path, metric)
+        splits, values = get_metric_over_split(None, path, metric)
         for skip in skips:
             try:
                 skip_index = splits.index(skip)
@@ -198,9 +199,9 @@ if __name__ == "__main__":
     rotation_label = "rotation"
     rotation_2d_path = "~/workspace/self-supervised-3d-tasks/rotation_kaggle_retina/weights-improvement-837_test_12/"
     rotation_3d_path = "~/workspace/self-supervised-3d-tasks/rotation_pancreas3d_9/weights-improvement-885_test_14"
-    combined_labels.append(rotation_label)
-    combined_2d_path.append(rotation_2d_path)
-    combined_3d_path.append(rotation_3d_path)
+    #combined_labels.append(rotation_label)
+    #combined_2d_path.append(rotation_2d_path)
+    #combined_3d_path.append(rotation_3d_path)
 
     rpl_label = "rpl"
     rpl_2d_path = "~/workspace/self-supervised-3d-tasks/rpl_kaggle_retina/weights-improvement-879_test_16/"
@@ -216,15 +217,15 @@ if __name__ == "__main__":
     #combined_2d_path.append(exemplar_2d_path)
     #combined_3d_path.append(exemplar_3d_path)
 
-    simclr_vloss_label = "simclr_vloss"
-    simclr_vloss_3d_path = "~/workspace/self-supervised-3d-tasks/jigsaw_pancreas3d_9/weights-improvement-671_test_13"
-    combined_labels.append(simclr_vloss_label)
-    combined_3d_path.append(simclr_vloss_3d_path)
+    simclr_bloss_label = "finetuned"
+    simclr_bloss_3d_path = "~/Desktop/results/finetuned_22"
+    #combined_labels.append(simclr_bloss_label)
+    #combined_3d_path.append(simclr_bloss_3d_path)
 
-    simclr_bloss_label = "simclr_bloss"
-    simclr_bloss_3d_path = "~/workspace/self-supervised-3d-tasks/jigsaw_pancreas3d_9/weights-improvement-671_test_13"
-    combined_labels.append(simclr_bloss_label)
-    combined_3d_path.append(simclr_bloss_3d_path)
+    simclr_vloss_label = "baseline"
+    simclr_vloss_3d_path = "~/Desktop/results/baseline_22"
+    #combined_labels.append(simclr_vloss_label)
+    #combined_3d_path.append(simclr_vloss_3d_path)
 
     baseline_label = "baseline"
     baseline_2d_path = "~/workspace/random_test_3/"
@@ -264,11 +265,52 @@ if __name__ == "__main__":
     #combined_labels.append(baseline_new_label)
     #combined_3d_path.append(baseline_new_3d_path)
 
-    split_2d_metric = "Weights_initialized_qw_kappa_kaggle_avg"
-    split_2d_metric_name = "Avg Qw Kappa"
+    #split_2d_metric = "Weights_initialized_qw_kappa_kaggle_avg"
+    #split_2d_metric_name = "Avg Qw Kappa"
     # draw_train_split_plot(combined_2d_path, combined_labels, split_2d_metric, skips=[1], metric_name=split_2d_metric_name)
-    split_3d_metric = "Weights_initialized_dice_avg"
-    split_3d_metric_name = "Avg Dice Scores"
+    split_3d_metric = "avg_brats_et"
+    split_3d_metric_name = "Avg Dice ET"
+    #split_3d_metric = "Weights_initialized_dice_pancreas_2_max"
+    #split_3d_metric_name = "Max Dice 2 Scores"
+    
+    #combined_labels.append('Majority')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_22/down_05_up_00/results_majority.csv')
+
+    #combined_labels.append('Borda')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_22/down_03_up_00/results_borda.csv')
+
+    #combined_labels.append('Majority 100')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_22/down_03_up_00/results_majority.csv')
+
+    #combined_labels.append('Majority 200')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_22/down_03_up_00/results_majority_200.csv')
+
+    #combined_labels.append('Majority 1000')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_22/down_03_up_00/results_majority_1000.csv')
+
+
+    #combined_labels.append('Union 2')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_22/down_05_up_00/results_union_2.csv')
+
+
+    combined_labels.append('finetuned')
+    combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_brats_01/results_none.csv')
+
+    combined_labels.append('finetuned_e03_d03')
+    combined_3d_path.append('/Users/d070867/Desktop/results/finetuned_brats_01/down_03_up_00/results_majority.csv')
+
+    combined_labels.append('baseline')
+    combined_3d_path.append('/Users/d070867/Desktop/results/baseline_brats_01/results_none.csv')
+
+    combined_labels.append('baseline_e03_d03')
+    combined_3d_path.append('/Users/d070867/Desktop/results/baseline_brats_01/down_03_up_00/results_majority.csv')
+
+    #combined_labels.append('baseline_e03_d03')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/baseline_22/down_03_up_03/results_majority.csv')
+
+    #combined_labels.append('baseline_e00_d03')
+    #combined_3d_path.append('/Users/d070867/Desktop/results/baseline_22/down_00_up_03/results_majority.csv')
+
     draw_train_split_plot(combined_3d_path, combined_labels, split_3d_metric, skips=[], prefix="3d", metric_name=split_3d_metric_name)
 
     exit(0)

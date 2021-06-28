@@ -10,8 +10,8 @@ def build_row(scores):
 	row.append()
 
 
-filename = '/Users/d070867/Desktop/Thesis/code/self-supervised-3d-tasks/results_full_baysien'
-base_path='/Users/d070867/Desktop/Thesis/code/self-supervised-3d-tasks'
+filename = '/Users/d070867/Desktop/results/finetuned_brats_01/down_03_up_03/full/results_full_majority'
+base_path='/Users/d070867/Desktop/results/finetuned_brats_01/down_03_up_03'
 
 with open(filename) as f:
     lines = f.readlines()
