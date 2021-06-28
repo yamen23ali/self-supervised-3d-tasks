@@ -309,6 +309,89 @@ def get_worst_image_union(algorithm="simclr",
     np.save(f'{worst_image_union_path}/label.npy', y_worst)
     np.save(f'{worst_image_union_path}/pred.npy', y_worst_pred)
 
+def get_best_prediction_enhancement(algorithm="simclr",
+    finetuned_model=None,
+    worst_image_union_path=None,
+    dataset_name="pancreas3d",
+    batch_size=5,
+    clipnorm=1,
+    clipvalue=1,
+    lr=1e-3,
+    scores=[],
+    mc_dropout_repetetions=1000,
+    union_class=2,
+    score_index = 4,
+    **kwargs):
+
+    # Hold the values to use them later
+    dropout_downconv = kwargs['dropout_downconv']
+    kwargs.pop('dropout_downconv', None)
+    dropout_upconv = kwargs['dropout_upconv']
+    kwargs.pop('dropout_upconv', None)
+
+    algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
+
+    data_loader = StandardDataLoader(
+        dataset_name,
+        batch_size,
+        algorithm_def,
+        **kwargs)
+    gen_train, gen_val, x_test, y_test = data_loader.get_dataset(0, 1)
+
+    model = get_compiled_model(
+        algorithm,
+        finetuned_model,
+        clipnorm=clipnorm,
+        clipvalue=clipvalue,
+        lr=lr,
+        dropout_downconv=0.0,
+        dropout_upconv=0.0,
+        **kwargs)
+
+    none_dropout_scores = []
+    dropout_scores = []
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+    for label, label_pred in zip(y_test, y_pred):
+        #label = label[np.newaxis,:,:,:,:]
+        #label_pred = label_pred[np.newaxis,:,:,:,:]
+        scores_f = make_scores(label, label_pred, scores)
+        none_dropout_scores.append(scores_f[score_index][1])
+
+    model = get_compiled_model(
+        algorithm,
+        finetuned_model,
+        clipnorm=clipnorm,
+        clipvalue=clipvalue,
+        lr=lr,
+        dropout_downconv=dropout_downconv,
+        dropout_upconv=dropout_upconv,
+        **kwargs)
+
+    #y_pred = union_mc_dropout(model, x_worst, 1, mc_dropout_repetetions, union_class)
+    y_pred = majority_mc_dropout(model, x_test, 1, mc_dropout_repetetions)
+
+    for label, label_pred in zip(y_test, y_pred):
+        #label = label[np.newaxis,:,:,:,:]
+        #label_pred = label_pred[np.newaxis,:,:,:,:]
+        scores_f = make_scores(label, label_pred, scores)
+        dropout_scores.append(scores_f[score_index][1])
+
+    dropout_scores = np.array(dropout_scores)
+    none_dropout_scores = np.array(none_dropout_scores)
+
+    diff = dropout_scores - none_dropout_scores
+    print(diff)
+
+    max_diff_ind = np.argmax(diff)
+    x_best = x_test[max_diff_ind][np.newaxis, :,:,:,:]
+    y_best = x_test[max_diff_ind][np.newaxis, :,:,:,:]
+    y_pred = majority_mc_dropout(model, x_best, 1, mc_dropout_repetetions)
+
+    np.save(f'{worst_image_union_path}/image.npy', x_best)
+    np.save(f'{worst_image_union_path}/label.npy', y_best)
+    np.save(f'{worst_image_union_path}/pred.npy', y_pred)
+
 def predict_all(
     finetuned_model=None,
     **kwargs):
@@ -397,4 +480,6 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
 #init(predict_all, "predict_all")
 #init(get_hist_all, "hist")
 #init(get_hist_per_image, "hist")
-init(get_worst_image_union, "get_worst_image_union")
+#init(get_worst_image_union, "get_worst_image_union")
+init(get_best_prediction_enhancement, "get_best_prediction_enhancement")
+
