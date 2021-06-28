@@ -273,6 +273,7 @@ def get_worst_image_union(algorithm="simclr",
 
     x_worst, y_worst, y_worst_pred  = [],[],[]
     min_score = 100
+    scores_f_min = []
 
     for x,y in zip(x_test,y_test):
         x = x[np.newaxis,:,:,:,:]
@@ -282,11 +283,12 @@ def get_worst_image_union(algorithm="simclr",
         print(scores_f[score_index])
         if scores_f[score_index][1] < min_score:
             min_score = scores_f[score_index][1]
+            scores_f_min = scores_f
             x_worst = x
             y_worst = y
             y_worst_pred = y_pred
 
-    print(min_score)
+    print(scores_f_min)
 
     model = get_compiled_model(
         algorithm,
@@ -300,7 +302,7 @@ def get_worst_image_union(algorithm="simclr",
 
     y_pred = union_mc_dropout(model, x_worst, 1, mc_dropout_repetetions, union_class)
     scores_f = make_scores(y_worst, y_pred, scores)
-    print(scores_f[score_index])
+    print(scores_f)
 
     np.save(f'{worst_image_union_path}/image.npy', x_worst)
     np.save(f'{worst_image_union_path}/label.npy', y_worst)
