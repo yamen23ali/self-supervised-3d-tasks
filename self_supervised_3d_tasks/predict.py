@@ -300,7 +300,7 @@ def get_worst_image_union(algorithm="simclr",
 
     y_pred = union_mc_dropout(model, x_worst, 1, mc_dropout_repetetions, union_class)
     scores_f = make_scores(y_worst, y_pred, scores)
-    print(min_score)
+    print(scores_f[score_index])
 
     np.save(f'{worst_image_union_path}/image.npy', x_worst)
     np.save(f'{worst_image_union_path}/label.npy', y_worst)
