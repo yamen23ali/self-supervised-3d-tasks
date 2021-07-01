@@ -309,6 +309,15 @@ def get_worst_image_union(algorithm="simclr",
     np.save(f'{worst_image_union_path}/label.npy', y_worst)
     np.save(f'{worst_image_union_path}/pred.npy', y_worst_pred)
 
+def get_score_per_image(y_test, y_pred, scores, score_index):
+    images_scores = []
+
+    for label, label_pred in zip(y_test, y_pred):
+        scores_f = make_scores(label, label_pred, scores)
+        images_scores.append(scores_f[score_index][1])
+
+    return np.array(images_scores)
+
 def get_best_prediction_enhancement(algorithm="simclr",
     finetuned_model=None,
     worst_image_union_path=None,
@@ -330,7 +339,6 @@ def get_best_prediction_enhancement(algorithm="simclr",
     kwargs.pop('dropout_upconv', None)
 
     algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
-
     data_loader = StandardDataLoader(
         dataset_name,
         batch_size,
@@ -338,6 +346,7 @@ def get_best_prediction_enhancement(algorithm="simclr",
         **kwargs)
     gen_train, gen_val, x_test, y_test = data_loader.get_dataset(0, 1)
 
+    #========== Get None MCD predictions
     model = get_compiled_model(
         algorithm,
         finetuned_model,
@@ -348,16 +357,10 @@ def get_best_prediction_enhancement(algorithm="simclr",
         dropout_upconv=0.0,
         **kwargs)
 
-    none_dropout_scores = []
-    dropout_scores = []
-
     y_pred = model.predict(x_test, batch_size=batch_size)
-    for label, label_pred in zip(y_test, y_pred):
-        #label = label[np.newaxis,:,:,:,:]
-        #label_pred = label_pred[np.newaxis,:,:,:,:]
-        scores_f = make_scores(label, label_pred, scores)
-        none_dropout_scores.append(scores_f[score_index][1])
+    none_dropout_scores = get_score_per_image(y_test, y_pred, scores, score_index)
 
+    #========== Get MCD predictions
     model = get_compiled_model(
         algorithm,
         finetuned_model,
@@ -368,28 +371,34 @@ def get_best_prediction_enhancement(algorithm="simclr",
         dropout_upconv=dropout_upconv,
         **kwargs)
 
-    #y_pred = union_mc_dropout(model, x_worst, 1, mc_dropout_repetetions, union_class)
     y_pred = majority_mc_dropout(model, x_test, 1, mc_dropout_repetetions)
+    dropout_scores = get_score_per_image(y_test, y_pred, scores, score_index)
 
-    for label, label_pred in zip(y_test, y_pred):
-        #label = label[np.newaxis,:,:,:,:]
-        #label_pred = label_pred[np.newaxis,:,:,:,:]
-        scores_f = make_scores(label, label_pred, scores)
-        dropout_scores.append(scores_f[score_index][1])
-
-    dropout_scores = np.array(dropout_scores)
-    none_dropout_scores = np.array(none_dropout_scores)
-
+    #===== Get best enhancement
     diff = dropout_scores - none_dropout_scores
     print(diff)
 
     max_diff_ind = np.argmax(diff)
     x_best = x_test[max_diff_ind][np.newaxis, :,:,:,:]
-    y_best = x_test[max_diff_ind][np.newaxis, :,:,:,:]
-    y_pred = majority_mc_dropout(model, x_best, 1, mc_dropout_repetetions)
-
+    y_best = y_test[max_diff_ind][np.newaxis, :,:,:,:]
     np.save(f'{worst_image_union_path}/image.npy', x_best)
     np.save(f'{worst_image_union_path}/label.npy', y_best)
+
+    #===== Get predicition for best enhancement with MDC
+    y_pred = majority_mc_dropout(model, x_best, 1, mc_dropout_repetetions)
+    np.save(f'{worst_image_union_path}/pred_dropout.npy', y_pred)
+
+    #===== Get predicition for best enhancement without MDC
+    model = get_compiled_model(
+        algorithm,
+        finetuned_model,
+        clipnorm=clipnorm,
+        clipvalue=clipvalue,
+        lr=lr,
+        dropout_downconv=0.0,
+        dropout_upconv=0.0,
+        **kwargs)
+    y_pred = model.predict(x_best, batch_size=batch_size)
     np.save(f'{worst_image_union_path}/pred.npy', y_pred)
 
 def predict_all(
