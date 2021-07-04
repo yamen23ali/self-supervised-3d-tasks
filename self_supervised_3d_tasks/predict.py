@@ -36,6 +36,17 @@ def average_mc_dropout(model, x_test, batch_size, repeate):
 
     return y_pred
 
+def sum_mc_dropout(model, x_test, batch_size, repeate):
+
+    print("Applying MDC sum")
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+
+    for i in range(0,repeate):
+        y_pred = y_pred + model.predict(x_test, batch_size=batch_size)
+
+    return y_pred
+
 def majority_mc_dropout(model, x_test, batch_size, repeate):
 
     print("Applying MDC majority")
@@ -207,6 +218,8 @@ def predict(
 
     if mc_dropout_mode=='average':
         y_pred = average_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
+    elif mc_dropout_mode=='sum':
+        y_pred = sum_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
     elif mc_dropout_mode=='majority':
         y_pred = majority_mc_dropout(model, x_test, batch_size, mc_dropout_repetetions)
     elif mc_dropout_mode=='weighted_majority':
@@ -222,10 +235,6 @@ def predict(
 
     scores_f = make_scores(y_test, y_pred, scores)
     print(scores_f)
-
-    #y_pred = np.argmax(y_pred, axis=-1)
-    #for i in range(0,y_pred.shape[0]):
-    #    np.save(f'{prediction_results_path}/image_{i}_pred.npy', y_pred[i])
 
 def get_best_model(files):
     models = [file_name  for file_name in files if 'hdf5' in file_name]
@@ -486,9 +495,9 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
         print(f'Test - Class {i} { (test_counts[i]*100)/ total}')
 
 #init(predict, "predict")
-#init(predict_all, "predict_all")
+init(predict_all, "predict_all")
 #init(get_hist_all, "hist")
 #init(get_hist_per_image, "hist")
 #init(get_worst_image_union, "get_worst_image_union")
-init(get_best_prediction_enhancement, "get_best_prediction_enhancement")
+#init(get_best_prediction_enhancement, "get_best_prediction_enhancement")
 
