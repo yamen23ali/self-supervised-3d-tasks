@@ -329,7 +329,7 @@ def get_score_per_image(y_test, y_pred, scores, score_index):
 
 def get_best_prediction_enhancement(algorithm="simclr",
     finetuned_model=None,
-    worst_image_union_path=None,
+    best_enhancement_path=None,
     dataset_name="pancreas3d",
     batch_size=5,
     clipnorm=1,
@@ -380,7 +380,8 @@ def get_best_prediction_enhancement(algorithm="simclr",
         dropout_upconv=dropout_upconv,
         **kwargs)
 
-    y_pred = majority_mc_dropout(model, x_test, 1, mc_dropout_repetetions)
+    # Get best enhancement over 10 runs
+    y_pred = majority_mc_dropout(model, x_test, 1, 10)
     dropout_scores = get_score_per_image(y_test, y_pred, scores, score_index)
 
     #===== Get best enhancement
@@ -390,12 +391,15 @@ def get_best_prediction_enhancement(algorithm="simclr",
     max_diff_ind = np.argmax(diff)
     x_best = x_test[max_diff_ind][np.newaxis, :,:,:,:]
     y_best = y_test[max_diff_ind][np.newaxis, :,:,:,:]
-    np.save(f'{worst_image_union_path}/image.npy', x_best)
-    np.save(f'{worst_image_union_path}/label.npy', y_best)
+    np.save(f'{best_enhancement_path}/image.npy', x_best)
+    np.save(f'{best_enhancement_path}/label.npy', y_best)
 
     #===== Get predicition for best enhancement with MDC
-    y_pred = majority_mc_dropout(model, x_best, 1, mc_dropout_repetetions)
-    np.save(f'{worst_image_union_path}/pred_dropout.npy', y_pred)
+    for i in [10, 30, 50 , 100]:
+        dir_path = f'{best_enhancement_path}/{i}'
+        os.mkdir(dir_path)
+        y_pred = majority_mc_dropout(model, x_best, 1, i)
+        np.save(f'{dir_path}/pred_dropout.npy', y_pred)
 
     #===== Get predicition for best enhancement without MDC
     model = get_compiled_model(
@@ -408,7 +412,7 @@ def get_best_prediction_enhancement(algorithm="simclr",
         dropout_upconv=0.0,
         **kwargs)
     y_pred = model.predict(x_best, batch_size=batch_size)
-    np.save(f'{worst_image_union_path}/pred.npy', y_pred)
+    np.save(f'{best_enhancement_path}/pred.npy', y_pred)
 
 def predict_all(
     finetuned_model=None,
