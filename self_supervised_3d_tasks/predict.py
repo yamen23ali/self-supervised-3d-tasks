@@ -380,8 +380,9 @@ def get_best_prediction_enhancement(algorithm="simclr",
         dropout_upconv=dropout_upconv,
         **kwargs)
 
-    # Get best enhancement over 10 runs
-    y_pred = majority_mc_dropout(model, x_test, 1, 10)
+    # Get best enhancement over 100 runs
+    y_pred = majority_mc_dropout(model, x_test, 1, 100)
+    #y_pred = union_mc_dropout(model, x_test, 1, 100, union_class)
     dropout_scores = get_score_per_image(y_test, y_pred, scores, score_index)
 
     #===== Get best enhancement
@@ -399,6 +400,7 @@ def get_best_prediction_enhancement(algorithm="simclr",
         dir_path = f'{best_enhancement_path}/{i}'
         os.mkdir(dir_path)
         y_pred = majority_mc_dropout(model, x_best, 1, i)
+        #y_pred = union_mc_dropout(model, x_test, 1, i, union_class)
         np.save(f'{dir_path}/pred_dropout.npy', y_pred)
 
     #===== Get predicition for best enhancement without MDC
