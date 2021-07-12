@@ -1,7 +1,7 @@
 {
   "algorithm": "cpc",
-  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm01/",
-  "data_dir": "/home/Yamen.Ali/netstore/",
+  "base_workspace": "/home/Yamen.Ali/netstore/workspace_vm03/",
+  "data_dir": "/home/Yamen.Ali/netstore/pancrease_resized_128_pretask",
   "dataset_name": "pancreas3d",
 
   "data_is_3D": true,
@@ -11,11 +11,13 @@
   "patches_per_side": 4,
   "data_dim": 128,
   "num_layers": 4,
+  "dropout_downconv": 0.3,
+  "dropout_upconv": 0.3,
 
   "top_architecture": "big_fully",
   "number_channels": 1,
   "batch_size": 4,
-  "embed_dim": 8,
+  "embed_dim": 64,
 
   "lr": 3e-3,
   "epochs": 1000
