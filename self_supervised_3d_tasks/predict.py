@@ -416,6 +416,79 @@ def get_best_prediction_enhancement(algorithm="simclr",
     y_pred = model.predict(x_best, batch_size=batch_size)
     np.save(f'{best_enhancement_path}/pred.npy', y_pred)
 
+def save_all_predicitions_of_best_prediction_enhancement(algorithm="simclr",
+    finetuned_model=None,
+    all_predictions_best_enhancement_path=None,
+    dataset_name="pancreas3d",
+    batch_size=5,
+    clipnorm=1,
+    clipvalue=1,
+    lr=1e-3,
+    scores=[],
+    mc_dropout_repetetions=1000,
+    union_class=2,
+    score_index = 4,
+    **kwargs):
+
+    # Hold the values to use them later
+    dropout_downconv = kwargs['dropout_downconv']
+    kwargs.pop('dropout_downconv', None)
+    dropout_upconv = kwargs['dropout_upconv']
+    kwargs.pop('dropout_upconv', None)
+
+    algorithm_def = keras_algorithm_list[algorithm].create_instance(**kwargs)
+    data_loader = StandardDataLoader(
+        dataset_name,
+        batch_size,
+        algorithm_def,
+        **kwargs)
+    gen_train, gen_val, x_test, y_test = data_loader.get_dataset(0, 1)
+
+    #========== Get None MCD predictions
+    model = get_compiled_model(
+        algorithm,
+        finetuned_model,
+        clipnorm=clipnorm,
+        clipvalue=clipvalue,
+        lr=lr,
+        dropout_downconv=0.0,
+        dropout_upconv=0.0,
+        **kwargs)
+
+    y_pred = model.predict(x_test, batch_size=batch_size)
+    none_dropout_scores = get_score_per_image(y_test, y_pred, scores, score_index)
+
+    #========== Get MCD predictions
+    model = get_compiled_model(
+        algorithm,
+        finetuned_model,
+        clipnorm=clipnorm,
+        clipvalue=clipvalue,
+        lr=lr,
+        dropout_downconv=dropout_downconv,
+        dropout_upconv=dropout_upconv,
+        **kwargs)
+
+    # Get best enhancement over 100 runs
+    y_pred = majority_mc_dropout(model, x_test, 1, 100)
+    #y_pred = union_mc_dropout(model, x_test, 1, 100, union_class)
+    dropout_scores = get_score_per_image(y_test, y_pred, scores, score_index)
+
+    #===== Get best enhancement
+    diff = dropout_scores - none_dropout_scores
+    print(diff)
+
+    max_diff_ind = np.argmax(diff)
+    x_best = x_test[max_diff_ind][np.newaxis, :,:,:,:]
+    y_best = y_test[max_diff_ind][np.newaxis, :,:,:,:]
+    np.save(f'{all_predictions_best_enhancement_path}/image.npy', x_best)
+    np.save(f'{all_predictions_best_enhancement_path}/label.npy', y_best)
+
+    #===== Get predicition for best enhancement with MDC
+    for i in range(0,mc_dropout_repetetions):
+        y_pred = model.predict(x_best, batch_size=1)
+        np.save(f'{all_predictions_best_enhancement_path}/pred_{i}.npy', y_pred)
+
 def predict_all(
     finetuned_model=None,
     **kwargs):
@@ -505,5 +578,7 @@ def get_hist_all(data_dir_train, data_dir_test, **kwargs):
 #init(get_hist_all, "hist")
 #init(get_hist_per_image, "hist")
 #init(get_worst_image_union, "get_worst_image_union")
-init(get_best_prediction_enhancement, "get_best_prediction_enhancement")
+#init(get_best_prediction_enhancement, "get_best_prediction_enhancement")
+init(save_all_predicitions_of_best_prediction_enhancement, "save_all_predicitions_of_best_prediction_enhancement")
+
 
